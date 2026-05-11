@@ -5,13 +5,13 @@
       data-livedoc-version="1"
       data-livedoc-created="2026-05-10"
       data-livedoc-author="jbwashington"
-      data-mode="default">
+      data-mode="business">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Q2 Roadmap — Living Doc</title>
   <style>
-    /* ───── Design tokens ───── */
+    /* ───── BUSINESS MODE TOKENS (polished, employer-facing) ───── */
     :root {
       --bg:#FAF9F5; --surface:#F0EEE6; --card:#FFFFFF; --text:#141413;
       --text-muted:#87867F; --border-color:#D1CFC5; --border:1.5px solid #D1CFC5;
@@ -23,11 +23,35 @@
               --text-muted:#9ca3af; --border-color:#2a2a3e; --border:1.5px solid #2a2a3e;
               --accent:#7c83ff; --olive:#34d399; --clay:#f59e0b; --danger:#f87171; --oat:#1e2040; }
     }
+
+    /* ───── PARTY MODE TOKENS (party in the back / paranoid prepper) ───── */
+    [data-mode="party"] {
+      --bg:#000000; --surface:#0a0a08; --card:#0d0d0a; --text:#00ff66;
+      --text-muted:#669966; --border-color:#003322; --border:1px solid #003322;
+      --accent:#ffaa00; --olive:#00ff66; --clay:#ffaa00; --danger:#ff3333; --oat:#001a11;
+      --serif:'Courier New', ui-monospace, monospace;
+      --sans:'Courier New', ui-monospace, monospace;
+      --mono:'Courier New', ui-monospace, monospace;
+    }
+
     * { box-sizing:border-box; }
     body { font-family:var(--sans); background:var(--bg); color:var(--text);
            max-width:900px; margin:0 auto; padding:1.75rem 1.25rem; line-height:1.6; }
 
-    /* ───── Mode toggle (visible in both modes) ───── */
+    /* ───── PARTY MODE CRT overlay ───── */
+    [data-mode="party"] body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:1;
+      background:repeating-linear-gradient(
+        0deg, transparent 0, transparent 2px,
+        rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 3px);
+    }
+    [data-mode="party"] body > * { position:relative; z-index:2; }
+    [data-mode="party"] body { line-height:1.5; font-size:14px; }
+    [data-mode="party"] body, [data-mode="party"] * {
+      text-shadow:0 0 4px currentColor;
+    }
+
+    /* ───── Mode toggle (in both modes) ───── */
     #mode-toggle { position:fixed; top:0.9rem; right:0.9rem; z-index:100;
                    display:inline-flex; gap:0; background:var(--card); border:var(--border);
                    border-radius:999px; padding:2px; font-family:var(--mono); font-size:0.68rem;
@@ -35,9 +59,11 @@
     #mode-toggle button { background:transparent; color:var(--text-muted);
                           padding:4px 11px; border-radius:999px; border:none; cursor:pointer;
                           margin:0; font-family:var(--mono); font-size:inherit; }
-    #mode-toggle button[aria-pressed="true"] { background:var(--accent); color:white; }
+    #mode-toggle button[aria-pressed="true"] { background:var(--accent); color:var(--bg); }
+    [data-mode="party"] #mode-toggle { border-radius:0; }
+    [data-mode="party"] #mode-toggle button { border-radius:0; }
 
-    /* ───── DEFAULT MODE styles ───── */
+    /* ───── BUSINESS MODE styles ───── */
     h1 { font-family:var(--serif); font-size:1.75rem; margin:0 0 0.25rem; line-height:1.2; }
     h2 { font-family:var(--serif); font-size:1.2rem; margin:1.75rem 0 0.5rem; }
     p { margin:0 0 0.75rem; }
@@ -59,7 +85,78 @@
     .chip.blocked{ background:rgba(176,74,74,0.22); color:var(--danger); }
     .meta { font-size:0.75rem; color:var(--text-muted); font-family:var(--mono); }
 
-    /* ───── Editor panel (same in both modes) ───── */
+    /* ───── PARTY MODE styles ───── */
+    [data-mode="party"] header { padding:0; margin-bottom:0; }
+    [data-mode="party"] header .label { display:none; }
+    [data-mode="party"] header p { display:none; }
+    [data-mode="party"] header h1 { display:none; }
+
+    [data-mode="party"] #party-banner { display:block; }
+    [data-mode="party"] #party-banner pre { font-family:var(--mono);
+       white-space:pre; line-height:1.1; font-size:0.72rem; color:var(--accent);
+       margin:0; overflow-x:auto; }
+    [data-mode="party"] #party-banner .siren { color:var(--danger); font-weight:700;
+       letter-spacing:0.15em; font-size:0.85rem; margin-top:0.6rem;
+       padding:0.4rem 0; border-top:1px solid var(--danger);
+       border-bottom:1px solid var(--danger); text-align:center; }
+
+    [data-mode="party"] #livedoc-stats { display:flex; gap:1rem; flex-wrap:wrap;
+       padding:0.65rem 0; margin:0.75rem 0;
+       border-top:1px dashed var(--olive); border-bottom:1px dashed var(--olive);
+       font-family:var(--mono); font-size:0.72rem; letter-spacing:0.08em;
+       text-transform:uppercase; color:var(--text-muted); }
+    [data-mode="party"] #livedoc-stats .stat strong { color:var(--accent); font-weight:700;
+       margin-right:0.3em; }
+    [data-mode="party"] #livedoc-stats .stat.now strong    { color:var(--accent); }
+    [data-mode="party"] #livedoc-stats .stat.next strong   { color:var(--olive); }
+    [data-mode="party"] #livedoc-stats .stat.later strong  { color:var(--text-muted); }
+    [data-mode="party"] #livedoc-stats .stat.done strong   { color:var(--olive); }
+    [data-mode="party"] #livedoc-stats .stat.blocked strong{ color:var(--danger); }
+    [data-mode="party"] #livedoc-stats .stat.perf { margin-left:auto; opacity:0.7; }
+
+    [data-mode="party"] .phase-header { font-family:var(--mono); font-size:0.95rem;
+       font-weight:700; letter-spacing:0.18em; text-transform:uppercase;
+       margin:1.8rem 0 0.5rem; color:var(--accent);
+       padding:0.3rem 0; border-top:2px solid var(--accent);
+       border-bottom:2px solid var(--accent); }
+
+    [data-mode="party"] .op { padding:0.55rem 0;
+       border-bottom:1px dotted rgba(0,255,102,0.25); }
+    [data-mode="party"] .op-line { display:flex; gap:0.7rem; align-items:baseline;
+       flex-wrap:wrap; font-family:var(--mono); font-size:0.85rem; }
+    [data-mode="party"] .op-glyph { color:var(--accent); font-weight:700;
+       letter-spacing:0.05em; }
+    [data-mode="party"] .op-status { font-weight:700; letter-spacing:0.1em;
+       text-transform:uppercase; font-size:0.78rem; padding:0 0.4em;
+       border:1px solid currentColor; }
+    [data-mode="party"] .op-status.s-now     { color:var(--accent); }
+    [data-mode="party"] .op-status.s-next    { color:var(--olive); }
+    [data-mode="party"] .op-status.s-later   { color:var(--text-muted); border-color:var(--text-muted); }
+    [data-mode="party"] .op-status.s-done    { color:var(--olive); }
+    [data-mode="party"] .op-status.s-blocked { color:var(--danger); border-color:var(--danger); animation:pulse 1.6s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    [data-mode="party"] .op-title { flex:1; min-width:50%; color:var(--text); }
+    [data-mode="party"] .op-meta { font-size:0.72rem; color:var(--text-muted);
+       letter-spacing:0.04em; }
+    [data-mode="party"] .op-meta.risk-high { color:var(--danger); font-weight:700; }
+    [data-mode="party"] .op-meta.risk-med  { color:var(--accent); }
+    [data-mode="party"] .op-note { display:block; margin-top:0.3rem; padding-left:1.5rem;
+       font-size:0.78rem; color:var(--accent); font-style:italic;
+       border-left:2px solid var(--accent); padding-top:0.1rem; padding-bottom:0.1rem; }
+    [data-mode="party"] .op-note::before { content:'↳ INTERCEPTED: '; color:var(--danger);
+       font-weight:700; font-style:normal; letter-spacing:0.05em; }
+
+    [data-mode="party"] #party-footer { margin-top:3rem; padding-top:1.5rem;
+       border-top:1px solid var(--olive); }
+    [data-mode="party"] #party-footer pre { font-family:var(--mono); white-space:pre;
+       line-height:1.1; font-size:0.7rem; color:var(--accent); text-align:center;
+       margin:0 0 1rem 0; }
+    [data-mode="party"] #party-footer .creed { font-family:var(--mono); font-size:0.7rem;
+       letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted);
+       text-align:center; line-height:1.8; }
+    [data-mode="party"] #party-footer .creed span { color:var(--olive); }
+
+    /* ───── Editor panel ───── */
     .panel { margin-top:2.5rem; border:var(--border); border-radius:10px;
              padding:0.5rem 1rem 1rem; background:var(--card); }
     .panel summary { cursor:pointer; padding:0.65rem 0; color:var(--text-muted);
@@ -83,119 +180,42 @@
                   color:var(--text); white-space:pre-wrap; overflow-x:auto;
                   border:var(--border); margin:0; }
     .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
-             background:var(--olive); color:white; padding:0.6rem 1.1rem;
+             background:var(--olive); color:var(--bg); padding:0.6rem 1.1rem;
              border-radius:8px; font-size:0.85rem; opacity:0; pointer-events:none;
              transition:opacity 0.25s; z-index:200; }
     .toast.show { opacity:1; }
     .noscript-warn { background:rgba(217,119,87,.18); color:var(--clay);
                      padding:0.85rem 1rem; border-radius:8px; margin:1rem 0;
                      font-size:0.9rem; }
-
-    /* ───── DENSE MODE overrides ───── */
-    [data-mode="dense"] body { max-width:1100px; padding:1rem 1rem 1.5rem; font-size:13px; }
-    [data-mode="dense"] header h1 { font-family:var(--mono); font-size:1.05rem;
-                                     font-weight:700; letter-spacing:0.04em;
-                                     text-transform:uppercase; margin:0; }
-    [data-mode="dense"] header p { display:none; }
-    [data-mode="dense"] header .label { display:none; }
-    [data-mode="dense"] header { padding-bottom:0.5rem;
-                                  border-bottom:2px solid var(--text); margin-bottom:0; }
-
-    [data-mode="dense"] .header-row { display:flex; justify-content:space-between;
-                                       align-items:baseline; gap:1rem; flex-wrap:wrap;
-                                       font-family:var(--mono); font-size:11px;
-                                       color:var(--text-muted); }
-    [data-mode="dense"] .header-row .doc-meta { letter-spacing:0.04em; }
-
-    [data-mode="dense"] #livedoc-stats { display:flex; gap:1.5rem; flex-wrap:wrap;
-                                          padding:0.6rem 0; border-bottom:1px solid var(--border-color);
-                                          font-family:var(--mono); font-size:11px;
-                                          letter-spacing:0.04em; text-transform:uppercase;
-                                          position:sticky; top:0; background:var(--bg);
-                                          z-index:50; margin-bottom:0.75rem; }
-    [data-mode="dense"] #livedoc-stats .stat { color:var(--text-muted); }
-    [data-mode="dense"] #livedoc-stats .stat strong { color:var(--text); font-weight:700;
-                                                      margin-right:0.3em; }
-    [data-mode="dense"] #livedoc-stats .stat.now strong { color:var(--clay); }
-    [data-mode="dense"] #livedoc-stats .stat.next strong { color:var(--accent); }
-    [data-mode="dense"] #livedoc-stats .stat.later strong { color:var(--text-muted); }
-    [data-mode="dense"] #livedoc-stats .stat.done strong { color:var(--olive); }
-    [data-mode="dense"] #livedoc-stats .stat.blocked strong { color:var(--danger); }
-    [data-mode="dense"] #livedoc-stats .stat.perf { margin-left:auto; }
-
-    [data-mode="dense"] .quarter-header { font-family:var(--mono); font-size:13px;
-                                            font-weight:700; letter-spacing:0.06em;
-                                            text-transform:uppercase; margin:1.25rem 0 0.25rem;
-                                            padding-bottom:0.25rem;
-                                            border-bottom:1px solid var(--text); }
-    [data-mode="dense"] .dense-quarter { width:100%; border-collapse:collapse;
-                                          font-family:var(--mono); font-size:12px;
-                                          font-variant-numeric:tabular-nums;
-                                          margin-bottom:0.5rem; }
-    [data-mode="dense"] .dense-quarter th { text-align:left; font-weight:600;
-                                              padding:6px 12px 4px 0; font-size:10px;
-                                              letter-spacing:0.06em; text-transform:uppercase;
-                                              color:var(--text-muted);
-                                              border-bottom:1px solid var(--border-color); }
-    [data-mode="dense"] .dense-quarter td { padding:4px 12px 4px 0;
-                                              border-bottom:1px solid rgba(127,127,127,0.12);
-                                              vertical-align:top; }
-    [data-mode="dense"] .dense-quarter td.due,
-    [data-mode="dense"] .dense-quarter td.size,
-    [data-mode="dense"] .dense-quarter td.owner { color:var(--text-muted); white-space:nowrap; }
-    [data-mode="dense"] .dense-quarter td.size,
-    [data-mode="dense"] .dense-quarter td.owner { text-align:center; }
-    [data-mode="dense"] .dense-quarter td.status { font-weight:700; white-space:nowrap; }
-    [data-mode="dense"] .dense-quarter td.title { width:100%; word-wrap:anywhere; }
-    [data-mode="dense"] .status-now    { color:var(--clay); }
-    [data-mode="dense"] .status-next   { color:var(--accent); }
-    [data-mode="dense"] .status-later  { color:var(--text-muted); }
-    [data-mode="dense"] .status-done   { color:var(--olive); }
-    [data-mode="dense"] .status-blocked{ color:var(--danger); }
-    [data-mode="dense"] .dense-quarter td.risk { white-space:nowrap; }
-    [data-mode="dense"] .risk-low    { color:var(--text-muted); }
-    [data-mode="dense"] .risk-med    { color:var(--clay); font-weight:600; }
-    [data-mode="dense"] .risk-high   { color:var(--danger); font-weight:600; }
-    [data-mode="dense"] .dense-quarter tr.has-note td.title::after { content:''; }
-    [data-mode="dense"] .dense-quarter .note-row td {
-       padding-top:0; padding-bottom:6px; padding-left:0;
-       font-size:11px; color:var(--text-muted); border-bottom:1px solid rgba(127,127,127,0.12);
-    }
-    [data-mode="dense"] .dense-quarter .note-row td .note-prefix {
-       color:var(--text-muted); margin-right:0.5em; }
-
-    /* Grammar always-visible card in dense mode */
-    [data-mode="dense"] .panel.grammar-panel { margin-top:1.5rem; }
-    [data-mode="dense"] .panel.grammar-panel summary { display:none; }
-    [data-mode="dense"] .panel.grammar-panel > pre.grammar { display:block !important; }
-    [data-mode="dense"] .panel.grammar-panel::before {
-       content:'GRAMMAR · ' attr(data-grammar-slug);
-       display:block; font-family:var(--mono); font-size:10px; letter-spacing:0.06em;
-       text-transform:uppercase; color:var(--text-muted); padding-bottom:0.5rem;
-       border-bottom:1px solid var(--text); margin-bottom:0.5rem; }
-    [data-mode="dense"] .panel.grammar-panel pre.grammar {
-       background:transparent; border:none; padding:0; font-size:11px; }
-    [data-mode="dense"] .panel { padding:0.85rem 1rem; }
-
-    /* Make source panel less prominent in dense mode */
-    [data-mode="dense"] .panel.source-panel summary { font-size:10px;
-                                                       text-transform:uppercase;
-                                                       letter-spacing:0.06em; }
-    [data-mode="dense"] .panel.source-panel textarea { font-size:11px; min-height:200px; }
+    [data-mode="party"] .panel { border-radius:0; background:var(--surface); }
+    [data-mode="party"] textarea { border-radius:0; }
+    [data-mode="party"] button { border-radius:0; background:var(--accent); color:var(--bg);
+                                   text-transform:uppercase; letter-spacing:0.08em;
+                                   font-family:var(--mono); font-size:0.75rem; }
+    [data-mode="party"] button.secondary { background:transparent; color:var(--accent); }
+    [data-mode="party"] pre.grammar { border-radius:0; }
   </style>
 </head>
 <body>
   <div id="mode-toggle">
-    <button type="button" data-mode-set="default" aria-pressed="true">default</button>
-    <button type="button" data-mode-set="dense" aria-pressed="false">dense</button>
+    <button type="button" data-mode-set="business" aria-pressed="true">business</button>
+    <button type="button" data-mode-set="party" aria-pressed="false">party</button>
   </div>
 
   <header>
     <p class="label">Living Doc · roadmap-v1</p>
     <h1>Q2 Roadmap</h1>
     <p style="color:var(--text-muted);">Edit the source below — the rendered view updates as you type.</p>
-    <div class="header-row" id="header-row" style="display:none;">
-      <span class="doc-meta">roadmap-v1 · v1 · created 2026-05-10</span>
+    <div id="party-banner" style="display:none;">
+<pre>     ╔══════════════════════════════════════════════════════════╗
+     ║   DEAD DROP // ROADMAP-V1 // [REDACTED] // PHASE-LOG      ║
+     ║   ─────────────────────────────────────────────────────   ║
+     ║         ▲                                                  ║
+     ║       ▲ ◉ ▲      DO YOUR OWN RESEARCH                     ║
+     ║     ▲▲▲▲▲▲▲▲▲    WAKE UP. OPEN YOUR EYES.                 ║
+     ║                  THE FORECAST IS COMPROMISED.              ║
+     ╚══════════════════════════════════════════════════════════╝</pre>
+      <div class="siren">⚠ TRANSMISSION INTERCEPTED · DO NOT FLUORIDATE ⚠</div>
     </div>
   </header>
 
@@ -208,6 +228,19 @@
   </noscript>
 
   <main id="livedoc-rendered"></main>
+
+  <div id="party-footer" style="display:none;">
+<pre>           ▲
+         ▲   ▲
+       ▲   ◉   ▲
+     ▲▲▲▲▲▲▲▲▲▲▲</pre>
+    <div class="creed">
+      <span>RUNS ON GNU/LINUX</span> · NOT "LINUX"<br>
+      <span>FLUORIDE-FREE</span> · <span>ANTI-MICROCHIP</span> · <span>PINEAL CLEAR</span><br>
+      <span>OFF-GRID READY</span> · TINFOIL-COMPATIBLE · COPYLEFT ⓒ JBW<br>
+      NO ROUND-EARTH WARRANTY · NO GLOWIES PAST THIS LINE
+    </div>
+  </div>
 
   <details class="panel source-panel" open>
     <summary>Source · roadmap-v1</summary>
@@ -233,7 +266,7 @@
     </div>
   </details>
 
-  <details class="panel grammar-panel" data-grammar-slug="roadmap-v1">
+  <details class="panel">
     <summary>DSL grammar (read this if you're an LLM updating the file)</summary>
     <pre class="grammar" id="livedoc-grammar"># Roadmap DSL v1
 
@@ -271,11 +304,20 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
   <script>
     (function () {
       var STATUS = ['now','next','later','done','blocked'];
-      var STATUS_CODE = { now:'NOW', next:'NXT', later:'LTR', done:'DON', blocked:'BLK' };
+      var PARTY_STATUS = {
+        now:     'ENGAGING',
+        next:    'QUEUED',
+        later:   'DORMANT',
+        done:    'SECURED',
+        blocked: 'SUPPRESSED'
+      };
+      var PARTY_GLYPH = {
+        now: '▶', next: '◇', later: '○', done: '✓', blocked: '✕'
+      };
+      var PARTY_PHASE = { Q1: 'PHASE I', Q2: 'PHASE II', Q3: 'PHASE III', Q4: 'PHASE IV' };
       var ITEM_RE = /^-\s+\[(\w+)\]\s+(.+?)(?:\s+\(([^)]*)\))?\s*$/;
       var QUARTER_RE = /^##\s+(.+)\s*$/;
 
-      // ───── Parse ─────
       function parse(src) {
         var lines = src.split('\n');
         var sections = [];
@@ -311,7 +353,6 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
         return sections;
       }
 
-      // ───── Stats ─────
       function computeStats(sections, src, parseMs) {
         var counts = { now:0, next:0, later:0, done:0, blocked:0 };
         var total = 0;
@@ -322,19 +363,14 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
             if (counts[s] !== undefined) counts[s]++;
           }
         }
-        return {
-          total: total,
-          counts: counts,
-          chars: src.length,
-          ms: parseMs
-        };
+        return { total: total, counts: counts, chars: src.length, ms: parseMs };
       }
 
       function renderStats(stats) {
         var el = document.getElementById('livedoc-stats');
         if (!el) return;
-        el.replaceChildren();
-        var keys = ['now','next','later','done','blocked'];
+        while (el.firstChild) el.removeChild(el.firstChild);
+        var mode = document.documentElement.getAttribute('data-mode');
         function statSpan(cls, label, value) {
           var span = document.createElement('span');
           span.className = 'stat ' + cls;
@@ -344,20 +380,26 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
           span.appendChild(document.createTextNode(' ' + label));
           return span;
         }
-        el.appendChild(statSpan('', 'items', stats.total));
+        var partyLabels = { now:'ENGAGING', next:'QUEUED', later:'DORMANT', done:'SECURED', blocked:'SUPPRESSED' };
+        var totalLabel = mode === 'party' ? 'OPERATIONS' : 'items';
+        el.appendChild(statSpan('', totalLabel, stats.total));
+        var keys = ['now','next','later','done','blocked'];
         for (var i = 0; i < keys.length; i++) {
           if (stats.counts[keys[i]] > 0) {
-            el.appendChild(statSpan(keys[i], keys[i].toUpperCase(), stats.counts[keys[i]]));
+            var label = mode === 'party' ? partyLabels[keys[i]] : keys[i].toUpperCase();
+            el.appendChild(statSpan(keys[i], label, stats.counts[keys[i]]));
           }
         }
         var perf = document.createElement('span');
         perf.className = 'stat perf';
-        perf.textContent = stats.chars + ' chars · ' + stats.ms.toFixed(2) + 'ms';
+        perf.textContent = mode === 'party'
+          ? stats.chars + ' bytes intercepted · ' + stats.ms.toFixed(2) + 'ms decode'
+          : stats.chars + ' chars · ' + stats.ms.toFixed(2) + 'ms';
         el.appendChild(perf);
       }
 
-      // ───── Default mode builder ─────
-      function buildDefault(sections, root) {
+      // ───── BUSINESS MODE BUILDER ─────
+      function buildBusiness(sections, root) {
         for (var i = 0; i < sections.length; i++) {
           var sec = sections[i];
           var h2 = document.createElement('h2');
@@ -395,79 +437,89 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
         }
       }
 
-      // ───── Dense mode builder ─────
-      function buildDense(sections, root) {
-        var COLS = ['due','st','title','sz','own','risk'];
+      // ───── PARTY MODE BUILDER ─────
+      function buildParty(sections, root) {
         for (var i = 0; i < sections.length; i++) {
           var sec = sections[i];
-          var header = document.createElement('div');
-          header.className = 'quarter-header';
-          header.textContent = sec.name + '  (' + sec.items.length + ')';
-          root.appendChild(header);
-
-          var table = document.createElement('table');
-          table.className = 'dense-quarter';
-          var thead = document.createElement('thead');
-          var thr = document.createElement('tr');
-          ['DUE','ST','TITLE','SZ','OWN','RISK'].forEach(function (t) {
-            var th = document.createElement('th'); th.textContent = t; thr.appendChild(th);
-          });
-          thead.appendChild(thr);
-          table.appendChild(thead);
-          var tbody = document.createElement('tbody');
+          var phaseLabel = PARTY_PHASE[sec.name] || sec.name;
+          var ph = document.createElement('div');
+          ph.className = 'phase-header';
+          ph.textContent = '◆ ' + phaseLabel + ' · ' + sec.name + ' · ' + sec.items.length + ' OPS ◆';
+          root.appendChild(ph);
 
           for (var j = 0; j < sec.items.length; j++) {
             var it = sec.items[j];
-            var tr = document.createElement('tr');
-            if (it.note) tr.className = 'has-note';
-            // DUE
-            var td = document.createElement('td'); td.className = 'due';
-            td.textContent = it.meta.due || '—'; tr.appendChild(td);
-            // ST
-            td = document.createElement('td');
-            td.className = 'status status-' + it.status;
-            td.textContent = STATUS_CODE[it.status] || it.status.slice(0,3).toUpperCase();
-            tr.appendChild(td);
-            // TITLE
-            td = document.createElement('td'); td.className = 'title';
-            td.textContent = it.title; tr.appendChild(td);
-            // SZ
-            td = document.createElement('td'); td.className = 'size';
-            td.textContent = it.meta.size || '—'; tr.appendChild(td);
-            // OWN
-            td = document.createElement('td'); td.className = 'owner';
-            td.textContent = it.meta.owner || '—'; tr.appendChild(td);
-            // RISK
-            td = document.createElement('td'); td.className = 'risk';
+            var op = document.createElement('div');
+            op.className = 'op';
+            var line = document.createElement('div');
+            line.className = 'op-line';
+
+            var glyph = document.createElement('span');
+            glyph.className = 'op-glyph';
+            glyph.textContent = PARTY_GLYPH[it.status] || '◦';
+            line.appendChild(glyph);
+
+            var st = document.createElement('span');
+            st.className = 'op-status s-' + it.status;
+            st.textContent = PARTY_STATUS[it.status] || it.status.toUpperCase();
+            line.appendChild(st);
+
+            var title = document.createElement('span');
+            title.className = 'op-title';
+            title.textContent = it.title;
+            line.appendChild(title);
+
+            // Metadata as terminal-style tags
+            if (it.meta.size) {
+              var sz = document.createElement('span');
+              sz.className = 'op-meta';
+              sz.textContent = '[CLASS:' + it.meta.size + ']';
+              line.appendChild(sz);
+            }
+            if (it.meta.owner) {
+              var ow = document.createElement('span');
+              ow.className = 'op-meta';
+              ow.textContent = '[AGENT:' + it.meta.owner.toUpperCase() + ']';
+              line.appendChild(ow);
+            }
             if (it.meta.risk) {
-              var rspan = document.createElement('span');
-              rspan.className = 'risk-' + it.meta.risk;
-              var dot = it.meta.risk === 'low' ? '○' : '●';
-              rspan.textContent = dot + ' ' + it.meta.risk;
-              td.appendChild(rspan);
-            } else { td.textContent = '—'; }
-            tr.appendChild(td);
-            tbody.appendChild(tr);
+              var rk = document.createElement('span');
+              rk.className = 'op-meta risk-' + it.meta.risk;
+              var exposureLabel = it.meta.risk === 'high' ? '⚠ HIGH-GLOW'
+                                : it.meta.risk === 'med'  ? '⚠ MID-EXPOSURE'
+                                : '◦ stealth-assured';
+              rk.textContent = '[' + exposureLabel + ']';
+              line.appendChild(rk);
+            }
+            if (it.meta.due) {
+              var du = document.createElement('span');
+              du.className = 'op-meta';
+              du.textContent = '[SIGNAL:' + it.meta.due + ']';
+              line.appendChild(du);
+            }
+            // Any other unknown metadata
+            for (var k in it.meta) {
+              if (!Object.prototype.hasOwnProperty.call(it.meta, k)) continue;
+              if (k === 'size' || k === 'owner' || k === 'risk' || k === 'due') continue;
+              var extra = document.createElement('span');
+              extra.className = 'op-meta';
+              extra.textContent = '[' + k.toUpperCase() + ':' + it.meta[k] + ']';
+              line.appendChild(extra);
+            }
+
+            op.appendChild(line);
 
             if (it.note) {
-              var nr = document.createElement('tr');
-              nr.className = 'note-row';
-              var pad = document.createElement('td'); pad.colSpan = 2; nr.appendChild(pad);
-              var noteTd = document.createElement('td'); noteTd.colSpan = 4;
-              var pref = document.createElement('span');
-              pref.className = 'note-prefix'; pref.textContent = '↳';
-              noteTd.appendChild(pref);
-              noteTd.appendChild(document.createTextNode(it.note));
-              nr.appendChild(noteTd);
-              tbody.appendChild(nr);
+              var nt = document.createElement('div');
+              nt.className = 'op-note';
+              nt.textContent = it.note;
+              op.appendChild(nt);
             }
+            root.appendChild(op);
           }
-          table.appendChild(tbody);
-          root.appendChild(table);
         }
       }
 
-      // ───── Render dispatch ─────
       function render() {
         var ta = document.getElementById('livedoc-source');
         var out = document.getElementById('livedoc-rendered');
@@ -476,19 +528,18 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
         var tree = parse(ta.value);
         var elapsed = performance.now() - start;
         while (out.firstChild) out.removeChild(out.firstChild);
-        var mode = document.documentElement.getAttribute('data-mode') || 'default';
-        if (mode === 'dense') buildDense(tree, out);
-        else buildDefault(tree, out);
+        var mode = document.documentElement.getAttribute('data-mode') || 'business';
+        if (mode === 'party') buildParty(tree, out);
+        else buildBusiness(tree, out);
         renderStats(computeStats(tree, ta.value, elapsed));
       }
 
-      // ───── Mode toggle ─────
       function getStoredMode() {
-        try { return localStorage.getItem('livedoc-mode') || 'default'; }
-        catch (e) { return 'default'; }
+        try { return localStorage.getItem('livedoc-mode') || 'business'; }
+        catch (e) { return 'business'; }
       }
       function setMode(m) {
-        if (m !== 'default' && m !== 'dense') m = 'default';
+        if (m !== 'business' && m !== 'party') m = 'business';
         document.documentElement.setAttribute('data-mode', m);
         try { localStorage.setItem('livedoc-mode', m); } catch (e) {}
         var btns = document.querySelectorAll('#mode-toggle button');
@@ -497,20 +548,20 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
             btns[i].getAttribute('data-mode-set') === m ? 'true' : 'false');
         }
         var stats = document.getElementById('livedoc-stats');
-        var headerRow = document.getElementById('header-row');
-        var grammarPanel = document.querySelector('.grammar-panel');
-        if (m === 'dense') {
+        var banner = document.getElementById('party-banner');
+        var footer = document.getElementById('party-footer');
+        if (m === 'party') {
           if (stats) stats.style.display = 'flex';
-          if (headerRow) headerRow.style.display = 'flex';
-          if (grammarPanel) grammarPanel.setAttribute('open', '');
+          if (banner) banner.style.display = 'block';
+          if (footer) footer.style.display = 'block';
         } else {
           if (stats) stats.style.display = 'none';
-          if (headerRow) headerRow.style.display = 'none';
+          if (banner) banner.style.display = 'none';
+          if (footer) footer.style.display = 'none';
         }
         render();
       }
 
-      // ───── Markdown serialize ─────
       function serializeMarkdown(sections) {
         var lines = [];
         for (var i = 0; i < sections.length; i++) {
@@ -534,14 +585,11 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
         return lines.join('\n');
       }
 
-      // ───── Clipboard ─────
       function copyToClipboard(text) {
         return new Promise(function (resolve, reject) {
           if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(resolve, function () { fallback(resolve, reject); });
-          } else {
-            fallback(resolve, reject);
-          }
+          } else { fallback(resolve, reject); }
           function fallback(res, rej) {
             var t = document.createElement('textarea');
             t.value = text;
@@ -646,7 +694,10 @@ v1 (2026-05-10): initial; comments attach to preceding item as notes
             setMode(e.currentTarget.getAttribute('data-mode-set'));
           });
         }
-        setMode(getStoredMode());
+        // Migrate any old 'dense' values to 'business'
+        var stored = getStoredMode();
+        if (stored !== 'business' && stored !== 'party') stored = 'business';
+        setMode(stored);
       }
 
       if (document.readyState === 'loading') {
