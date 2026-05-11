@@ -1,0 +1,13 @@
+# Claude Code hook logs (PostToolUse writes here)
+logs/
+
+# macOS
+.DS_Store
+
+# Backup files from .bak convention
+*.html.bak
+
+# Editor cruft
+*.swp
+.vscode/
+.idea/
