@@ -366,6 +366,8 @@
   Token-cost reflects active intensity but ignores invisible work.
   <strong>What if the agent billed JB directly</strong>, JB paid out-of-pocket, and reimbursed himself from the client?
   Does that fix the accountability gap — or just create a worse one?</p>
+  <p style="margin-top: 0.65rem; margin-bottom: 0;"><strong>Also:</strong> 3 of 4 Titan clients (Connective Sports, Tatlist, Marian Washington) are or should be on SLAs.
+  Per-session billing is the minority case — the primary billing instrument should be a monthly retainer with one of the four per-session models for overages.</p>
 </div>
 
 <!-- ═════════════════════ PLAYGROUND ═════════════════════ -->
@@ -416,10 +418,10 @@
   </label>
 </div>
 
-<h3 style="margin-top: 1.5rem;">Per-client rate modifier</h3>
+<h3 style="margin-top: 1.5rem;">Per-client rate modifier &amp; SLA posture</h3>
 <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.6rem;">
-  Multiplier applied to every model's output for that client. GapSnow is nonprofit + simple work, so it starts at 0.65×.
-  Marian Washington is set to 1.0 by default — <strong>confirm with Aisha</strong>.
+  Multiplier applied to every model's output. 3 of 4 clients are SLA-bound or should be — see the chips.
+  GapSnow is the only one that stays ad-hoc by design (nonprofit + simple changes).
 </p>
 <div class="tier-rates" id="client-rates"></div>
 
@@ -523,8 +525,26 @@
     </ul></div>
   </article>
 
+  <article class="card" style="border-left: 3px solid #8b5cf6;">
+    <h3 style="margin-top: 0;">4. SLA / Retainer</h3>
+    <p class="label">The shape 3 of 4 clients are moving toward</p>
+    <p style="font-size:0.9rem;">Monthly recurring fee, response-time gates, scope cap; overages billed at one of the above primitives.</p>
+    <div class="pros-cons pros"><ul>
+      <li><strong>Predictable MRR.</strong> Revenue doesn't stop when the build does.</li>
+      <li>Response-time guarantees are a real product, not a side effect — Aisha can sell it.</li>
+      <li>Client commits ahead of time → less per-session negotiation friction.</li>
+      <li>Stripe subscription handles the recurring side natively; overages stay as one-off invoices.</li>
+    </ul></div>
+    <div class="pros-cons cons"><ul>
+      <li>Scope definition is real work — what's in the retainer vs. what's overage?</li>
+      <li>Client may feel they "overpaid" on quiet months. Mitigate with carryover hours or banked credits.</li>
+      <li>Contracts get heavier — SLA terms, escalation paths, breach remedies.</li>
+      <li>Doesn't replace per-session models for overages — you still need one of the four.</li>
+    </ul></div>
+  </article>
+
   <article class="card danger">
-    <h3 style="margin-top: 0;">4. Agent → JB → client</h3>
+    <h3 style="margin-top: 0;">5. Agent → JB → client</h3>
     <p class="label">JB's wildcard idea</p>
     <p style="font-size:0.9rem;">Agent bills JB at token × N. JB bills client at agent_bill × markup.</p>
     <div class="pros-cons pros"><ul>
@@ -682,7 +702,7 @@
 
 <div class="card warn">
   <ol style="margin: 0 0 0 1.1rem; padding: 0; font-size: 0.95rem;">
-    <li style="margin-bottom: 0.55rem;"><strong>Marian Washington's rate.</strong> Defaulting to 1.0× (full rate) in the playground. Should this be full rate, or does her project warrant a different tier? It's the only client whose rate isn't dialed in.</li>
+    <li style="margin-bottom: 0.55rem;"><strong>SLA structure across the book.</strong> Connective Sports and Tatlist are about to be on SLAs; Marian Washington should be but isn't. What's in the retainer (response time, included hours, scope) vs. out (overage rate, ad-hoc requests)? And what's the catch-up plan for Marian — is it a separate conversation or part of a "we're formalizing SLAs across the board" rollout?</li>
     <li style="margin-bottom: 0.55rem;"><strong>Is the markup defensible to the client?</strong> 4× sounds spicy in the abstract, but it's covering: judgment, risk absorption (you might never get reimbursed for a bad session), and the float (your money tied up). What multiplier does the math say is fair?</li>
     <li style="margin-bottom: 0.55rem;"><strong>Disclosure.</strong> Do clients know the agent costs $X and they're paying Y? Or do they just see "engineering hours"? Either is defensible — pick deliberately.</li>
     <li style="margin-bottom: 0.55rem;"><strong>Wallet seed.</strong> If we go wallet-based, what's the opening balance? Self-funded float, retainer from each client, or pure pay-as-you-go that refuses every first session?</li>
@@ -694,11 +714,13 @@
 <aside class="card accent">
   <p class="label">Recommendation if we have to ship one thing tomorrow</p>
   <p style="margin-bottom: 0.4rem;">
-    Start with <strong>Token × N for the agent's bill to JB</strong> + <strong>tiered hourly for JB's bill to the client</strong>, drag-tier-assigned per session in this UI.
-    That's the cleanest two-invoice setup: machine-honest on one side, client-legible on the other.
+    For the three SLA-bound clients (Connective Sports, Tatlist, Marian Washington): <strong>monthly retainer via Stripe subscription</strong> covers the baseline; overages get a one-off invoice using <strong>Token × N (agent → JB)</strong> + <strong>tiered hourly (JB → client)</strong>, drag-tier-assigned per session in this UI.
+  </p>
+  <p style="margin-bottom: 0.4rem;">
+    For GapSnow (ad-hoc nonprofit): per-session tiered hourly with the 0.65× modifier. No retainer.
   </p>
   <p style="margin-bottom: 0;">
-    Layer (a) pre-flight estimate first. (b) wallet next when there's a client where it matters. (c)/(d)/(e) only if the first two are working and we still feel exposed.
+    Implementation order: (a) pre-flight estimate first. (b) Stripe subscription wiring for the SLA shift. (c) wallet ledger if/when a client where it matters needs it. (d)/(e) only if the first three are working and we still feel exposed.
   </p>
 </aside>
 
@@ -708,10 +730,10 @@
 
 <script>
 const CLIENTS = {
-  "connective-sports": { name: "Connective Sports", rate: 1.00, label: "Full rate" },
-  "tatlist-app":       { name: "Tatlist",           rate: 1.00, label: "Full rate" },
-  "gapsnow":           { name: "GapSnow",           rate: 0.65, label: "Nonprofit" },
-  "marian-washington": { name: "Marian Washington", rate: 1.00, label: "Full rate?" },
+  "connective-sports": { name: "Connective Sports", rate: 1.00, label: "Full · pre-SLA",  sla: "pending" },
+  "tatlist-app":       { name: "Tatlist",           rate: 1.00, label: "Full · pre-SLA",  sla: "pending" },
+  "marian-washington": { name: "Marian Washington", rate: 1.00, label: "Full · SLA gap",  sla: "overdue" },
+  "gapsnow":           { name: "GapSnow",           rate: 0.65, label: "Nonprofit · ad-hoc", sla: "none" },
 };
 
 const SESSIONS = [
@@ -816,11 +838,19 @@ function recalc() {
 function renderClientRates() {
   const container = document.getElementById("client-rates");
   container.innerHTML = "";
+  const slaChip = {
+    pending:  { cls: "accent", text: "→ SLA soon" },
+    overdue:  { cls: "clay",   text: "SLA overdue" },
+    none:     { cls: "",       text: "ad-hoc" },
+  };
   for (const [key, def] of Object.entries(CLIENTS)) {
     const wrap = document.createElement("div");
     wrap.className = "tier-rate tier-" + (def.rate < 1 ? "junior" : "standard");
+    const s = slaChip[def.sla] || slaChip.none;
     wrap.innerHTML = `
-      <div class="tier-name">${def.name} <span class="chip" style="font-size:0.62rem; margin-left:0.25rem;">${def.label}</span></div>
+      <div class="tier-name">${def.name}
+        <span class="chip ${s.cls}" style="font-size:0.6rem; margin-left:0.2rem;">${s.text}</span>
+      </div>
       <input type="number" data-client-rate="${key}" value="${state.clientRates[key].toFixed(2)}" min="0" max="2" step="0.05">
     `;
     container.appendChild(wrap);
