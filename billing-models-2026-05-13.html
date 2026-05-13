@@ -349,13 +349,14 @@
   <h1>How should an agent bill for itself?</h1>
   <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
     A drag-around playground for the four billing models we're choosing between,
-    using real session snapshots from <code>~/.claude/billing/sessions/</code>.
-    Move sessions between tiers, slide multipliers, watch totals change.
+    using real Connective Sports sessions from <code>~/.claude/billing/sessions/</code>
+    plus labeled example sessions for the other three clients in the book.
+    Move sessions between tiers, slide multipliers, set per-client rate modifiers, watch totals change.
   </p>
   <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin:0.6rem 0 0;">
     <span class="chip accent">interactive</span>
-    <span class="chip">real session data</span>
-    <span class="chip">no auto-save — open as many tabs as you want</span>
+    <span class="chip">4 clients · 15 sessions</span>
+    <span class="chip clay">connective-sports is real · others are examples</span>
   </div>
 </header>
 
@@ -414,6 +415,13 @@
     (otherwise an 8-hour overnight scraper bills 8 hours)
   </label>
 </div>
+
+<h3 style="margin-top: 1.5rem;">Per-client rate modifier</h3>
+<p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.6rem;">
+  Multiplier applied to every model's output for that client. GapSnow is nonprofit + simple work, so it starts at 0.65×.
+  Marian Washington is set to 1.0 by default — <strong>confirm with Aisha</strong>.
+</p>
+<div class="tier-rates" id="client-rates"></div>
 
 <h3 style="margin-top: 1.5rem;">Tier rates (hourly)</h3>
 <div class="tier-rates">
@@ -674,6 +682,7 @@
 
 <div class="card warn">
   <ol style="margin: 0 0 0 1.1rem; padding: 0; font-size: 0.95rem;">
+    <li style="margin-bottom: 0.55rem;"><strong>Marian Washington's rate.</strong> Defaulting to 1.0× (full rate) in the playground. Should this be full rate, or does her project warrant a different tier? It's the only client whose rate isn't dialed in.</li>
     <li style="margin-bottom: 0.55rem;"><strong>Is the markup defensible to the client?</strong> 4× sounds spicy in the abstract, but it's covering: judgment, risk absorption (you might never get reimbursed for a bad session), and the float (your money tied up). What multiplier does the math say is fair?</li>
     <li style="margin-bottom: 0.55rem;"><strong>Disclosure.</strong> Do clients know the agent costs $X and they're paying Y? Or do they just see "engineering hours"? Either is defensible — pick deliberately.</li>
     <li style="margin-bottom: 0.55rem;"><strong>Wallet seed.</strong> If we go wallet-based, what's the opening balance? Self-funded float, retainer from each client, or pure pay-as-you-go that refuses every first session?</li>
@@ -698,25 +707,51 @@
 </footer>
 
 <script>
+const CLIENTS = {
+  "connective-sports": { name: "Connective Sports", rate: 1.00, label: "Full rate" },
+  "tatlist-app":       { name: "Tatlist",           rate: 1.00, label: "Full rate" },
+  "gapsnow":           { name: "GapSnow",           rate: 0.65, label: "Nonprofit" },
+  "marian-washington": { name: "Marian Washington", rate: 1.00, label: "Full rate?" },
+};
+
 const SESSIONS = [
-  {id: "dashboard", title: "Dashboard memory leaks", repo: "client/connective-sports",
-   cost: 20.20, wall_ms: 217001793, api_ms: 1139925, tier: "senior"},
-  {id: "migration", title: "Reconcile prod Supabase migration ledger", repo: "client/connective-sports",
-   cost: 24.18, wall_ms: 200488579, api_ms: 1801200, tier: "strategic"},
-  {id: "tg-changelog", title: "Review Telegram changelog for useful features", repo: "iptv-panel/telegram-bot",
-   cost: 28.37, wall_ms: 83083687, api_ms: 4200000, tier: "standard"},
-  {id: "ipt-rev", title: "Reverse engineer IPTV player", repo: "personal/tivimate-reverse-engineer",
-   cost: 24.27, wall_ms: 144714709, api_ms: 3100000, tier: "strategic"},
-  {id: "btcpay", title: "Check Electrum wallet and fund with Bitcoin", repo: "personal/btcpay",
-   cost: 10.80, wall_ms: 111576709, api_ms: 1800000, tier: "junior"},
-  {id: "schools", title: "Add /schools landing page", repo: "orgs/fullstacktechnyc",
-   cost: 5.35, wall_ms: 119178353, api_ms: 950000, tier: "standard"},
-  {id: "gh-page", title: "Update GitHub page with minimalist layout", repo: "personal/jbwashington.github.io",
-   cost: 11.02, wall_ms: 131216921, api_ms: 1450000, tier: "junior"},
-  {id: "stripe-bill", title: "Set up Stripe invoice generation for Titan clients", repo: "orgs/titan-secure-tech",
-   cost: 1.91, wall_ms: 40781582, api_ms: 320000, tier: "senior"},
-  {id: "iptv-audit", title: "Investigate IPTVEditor pattern audit downtime", repo: "personal/iptv-panel",
-   cost: 3.04, wall_ms: 4088686, api_ms: 600000, tier: "standard"},
+  // ── Connective Sports — real sessions from billing snapshots ──
+  {id: "cs-leaks", client: "connective-sports", title: "Dashboard memory leaks",
+   cost: 20.20, wall_ms: 217001793, api_ms: 1139925, tier: "senior", example: false},
+  {id: "cs-migration", client: "connective-sports", title: "Reconcile prod Supabase migration ledger",
+   cost: 24.18, wall_ms: 200488579, api_ms: 2696093, tier: "strategic", example: false},
+  {id: "cs-freeze", client: "connective-sports", title: "Debug webapp freeze during session editing",
+   cost: 5.26, wall_ms: 37021317, api_ms: 204175, tier: "standard", example: false},
+  {id: "cs-statsports", client: "connective-sports", title: "Compare Tampa Gold data with StatSports",
+   cost: 36.47, wall_ms: 221428719, api_ms: 2888020, tier: "senior", example: false},
+  {id: "cs-heatmap", client: "connective-sports", title: "Remove Mapbox heatmap from session details",
+   cost: 8.78, wall_ms: 91056325, api_ms: 835340, tier: "standard", example: false},
+  {id: "cs-training", client: "connective-sports", title: "Remove training distribution card",
+   cost: 1.64, wall_ms: 31823546, api_ms: 197403, tier: "junior", example: false},
+  {id: "cs-mvp-review", client: "connective-sports", title: "Review MVP changes against meeting notes",
+   cost: 42.43, wall_ms: 254539771, api_ms: 3551414, tier: "strategic", example: false},
+
+  // ── Tatlist — example sessions (full rate) ──
+  {id: "tl-filter", client: "tatlist-app", title: "Build directory filter component",
+   cost: 8.00, wall_ms: 14400000, api_ms: 720000, tier: "standard", example: true},
+  {id: "tl-auth", client: "tatlist-app", title: "Migrate auth from Clerk to NextAuth",
+   cost: 22.00, wall_ms: 64800000, api_ms: 2520000, tier: "senior", example: true},
+  {id: "tl-schema", client: "tatlist-app", title: "Schema migration for tagged listings",
+   cost: 14.00, wall_ms: 32400000, api_ms: 1620000, tier: "strategic", example: true},
+
+  // ── GapSnow — example sessions (nonprofit, simple changes) ──
+  {id: "gn-copy", client: "gapsnow", title: "Update homepage copy and event date",
+   cost: 3.00, wall_ms: 7200000, api_ms: 360000, tier: "junior", example: true},
+  {id: "gn-sponsors", client: "gapsnow", title: "Add new sponsor logos to footer",
+   cost: 1.50, wall_ms: 5400000, api_ms: 180000, tier: "junior", example: true},
+  {id: "gn-donate", client: "gapsnow", title: "Fix donation form validation",
+   cost: 4.00, wall_ms: 10800000, api_ms: 540000, tier: "standard", example: true},
+
+  // ── Marian Washington — example sessions (rate TBD with Aisha) ──
+  {id: "mw-gallery", client: "marian-washington", title: "Build artist portfolio gallery",
+   cost: 11.00, wall_ms: 21600000, api_ms: 1260000, tier: "standard", example: true},
+  {id: "mw-cms", client: "marian-washington", title: "Add CMS for blog entries",
+   cost: 18.00, wall_ms: 50400000, api_ms: 2160000, tier: "senior", example: true},
 ];
 
 const ASYNC_THRESHOLD = 0.03;
@@ -732,8 +767,11 @@ const state = {
   markup: 4,
   activeOnly: true,
   rates: {junior: 80, standard: 130, senior: 180, strategic: 250},
+  clientRates: Object.fromEntries(Object.entries(CLIENTS).map(([k,v]) => [k, v.rate])),
   sessions: SESSIONS.map(s => ({...s})),
 };
+
+function clientMult(s) { return state.clientRates[s.client] ?? 1; }
 
 function recalc() {
   const totalCost = state.sessions.reduce((a,s) => a + s.cost, 0);
@@ -741,15 +779,23 @@ function recalc() {
   const totalActive = state.sessions.reduce((a,s) => a + activeHours(s), 0);
 
   const standardRate = state.rates.standard;
-  const hourly = (state.activeOnly ? totalActive : totalWall) * standardRate;
+  // Hourly with per-client modifier applied
+  const hourly = state.sessions.reduce((a,s) => {
+    const hrs = state.activeOnly ? activeHours(s) : wallHours(s);
+    return a + hrs * standardRate * clientMult(s);
+  }, 0);
 
-  const token = totalCost * state.multiplier;
+  // Token model with per-client modifier
+  const token = state.sessions.reduce((a,s) => a + s.cost * state.multiplier * clientMult(s), 0);
 
+  // Tiered hourly with per-client modifier; also update column subtotals
   let tiered = 0;
   for (const tier of ["junior","standard","senior","strategic"]) {
     const inTier = state.sessions.filter(s => s.tier === tier);
-    const hrs = inTier.reduce((a,s) => a + (state.activeOnly ? activeHours(s) : wallHours(s)), 0);
-    const sub = hrs * state.rates[tier];
+    const sub = inTier.reduce((a,s) => {
+      const hrs = state.activeOnly ? activeHours(s) : wallHours(s);
+      return a + hrs * state.rates[tier] * clientMult(s);
+    }, 0);
     tiered += sub;
     document.querySelector(`[data-col-total="${tier}"]`).textContent = fmt(sub);
   }
@@ -761,10 +807,30 @@ function recalc() {
   setText("total-tiered", fmt(tiered));
   setText("total-passthrough", fmt(passthrough));
 
-  setText("detail-hourly", `${(state.activeOnly ? totalActive : totalWall).toFixed(1)}h × $${standardRate}/hr`);
-  setText("detail-token", `${fmt2(totalCost)} cost × ${state.multiplier}×`);
+  setText("detail-hourly", `${(state.activeOnly ? totalActive : totalWall).toFixed(1)}h total · client-rates applied`);
+  setText("detail-token", `${fmt2(totalCost)} cost × ${state.multiplier}× · client-rates applied`);
   setText("detail-tiered", `${state.sessions.length} sessions across 4 tiers`);
   setText("detail-passthrough", `${fmt(token)} × ${state.markup}× markup`);
+}
+
+function renderClientRates() {
+  const container = document.getElementById("client-rates");
+  container.innerHTML = "";
+  for (const [key, def] of Object.entries(CLIENTS)) {
+    const wrap = document.createElement("div");
+    wrap.className = "tier-rate tier-" + (def.rate < 1 ? "junior" : "standard");
+    wrap.innerHTML = `
+      <div class="tier-name">${def.name} <span class="chip" style="font-size:0.62rem; margin-left:0.25rem;">${def.label}</span></div>
+      <input type="number" data-client-rate="${key}" value="${state.clientRates[key].toFixed(2)}" min="0" max="2" step="0.05">
+    `;
+    container.appendChild(wrap);
+  }
+  container.querySelectorAll("[data-client-rate]").forEach(inp => {
+    inp.addEventListener("input", e => {
+      state.clientRates[inp.dataset.clientRate] = +inp.value || 0;
+      recalc();
+    });
+  });
 }
 
 function setText(name, val) {
@@ -783,15 +849,16 @@ function renderSessions() {
     el.draggable = true;
     el.dataset.id = s.id;
     const async = isAsync(s);
+    const clientDef = CLIENTS[s.client] || { name: s.client, label: "?" };
     el.innerHTML = `
-      <div class="s-title">${s.title}</div>
+      <div class="s-title">${s.title}${s.example ? ' <span class="chip clay" style="font-size:0.6rem; vertical-align:middle;">example</span>' : ''}</div>
       <div class="s-meta">
         <span>${fmt2(s.cost)}</span>
         <span>${activeHours(s).toFixed(2)}h active</span>
         <span>${wallHours(s).toFixed(1)}h wall</span>
         ${async ? '<span class="async-flag">async</span>' : ''}
       </div>
-      <div class="s-repo">${s.repo}</div>
+      <div class="s-repo">${clientDef.name}</div>
     `;
     col.appendChild(el);
   });
@@ -844,6 +911,7 @@ document.querySelectorAll("[data-tier-rate]").forEach(inp => {
   });
 });
 
+renderClientRates();
 renderSessions();
 recalc();
 </script>
