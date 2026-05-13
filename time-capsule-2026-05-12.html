@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-artifact-name="Time Capsule"
+      data-artifact-grammar="time-capsule-v1"
+      data-artifact-version="1"
+      data-artifact-created="2026-05-12"
+      data-artifact-author="jbwashington">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Time Capsule — Artifact</title>
+  <style>
+    :root {
+      --bg:#FAF9F5; --surface:#F0EEE6; --card:#FFFFFF; --text:#141413;
+      --text-muted:#87867F; --border-color:#D1CFC5; --border:1.5px solid #D1CFC5;
+      --accent:#5C7CA3; --olive:#788C5D; --clay:#D97757; --danger:#B04A4A; --oat:#E3DACC;
+      --seal:#8B2632; --seal-shadow:#5A1820;
+      --paper:#FAF7F0;
+      --serif:'Iowan Old Style', ui-serif, Georgia, serif;
+      --sans:system-ui, -apple-system, sans-serif;
+      --mono:ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0f0f14; --surface:#1a1a2e; --card:#16213e; --text:#e0e0e0;
+        --text-muted:#9ca3af; --border-color:#2a2a3e; --border:1.5px solid #2a2a3e;
+        --accent:#7c83ff; --olive:#34d399; --clay:#f59e0b; --danger:#f87171; --oat:#1e2040;
+        --seal:#d97266; --seal-shadow:#8a3a32;
+        --paper:#1a1a2e;
+      }
+    }
+    * { box-sizing:border-box; }
+    body { font-family:var(--sans); background:var(--bg); color:var(--text);
+           max-width:780px; margin:0 auto; padding:1.75rem 1.25rem; line-height:1.6; }
+
+    /* Header */
+    header { margin-bottom:1.5rem; }
+    .label { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase;
+             letter-spacing:0.06em; color:var(--text-muted); margin:0; }
+    h1 { font-family:var(--serif); font-size:1.9rem; font-weight:600;
+         margin:0.2rem 0 0.4rem; line-height:1.15; }
+    .subtitle { color:var(--text-muted); font-size:0.92rem; margin:0; }
+    .today-strip { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em;
+                   text-transform:uppercase; color:var(--text-muted);
+                   margin-top:1.25rem; padding:0.5rem 0.85rem;
+                   background:var(--surface); border-radius:6px;
+                   display:flex; gap:1rem; flex-wrap:wrap; }
+    .today-strip strong { color:var(--text); font-weight:700; }
+    .today-strip .stat-open strong { color:var(--olive); }
+    .today-strip .stat-sealed strong { color:var(--seal); }
+
+    /* Section headers */
+    .section-title { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.12em;
+                     text-transform:uppercase; color:var(--text-muted);
+                     margin:2rem 0 0.9rem; padding-bottom:0.4rem;
+                     border-bottom:1px solid var(--border-color); }
+
+    /* Entry cards */
+    .entry { margin-bottom:1.5rem; display:grid;
+             grid-template-columns:80px 1fr; gap:1rem; align-items:start; }
+    .entry .gutter { display:flex; justify-content:center; padding-top:0.3rem; }
+    .entry .body { background:var(--card); border:var(--border); border-radius:10px;
+                   padding:1rem 1.2rem; }
+    .entry .meta { display:flex; gap:0.6rem; flex-wrap:wrap; align-items:baseline;
+                   margin-bottom:0.5rem; }
+    .entry .to { font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em;
+                 text-transform:uppercase; color:var(--text-muted); }
+    .entry .to::before { content:'TO '; color:var(--text-muted); margin-right:0.3em; opacity:0.6; }
+    .entry .status { font-family:var(--mono); font-size:0.7rem; letter-spacing:0.08em;
+                     padding:0.15em 0.5em; border-radius:999px; text-transform:uppercase; }
+    .entry.open .status { background:rgba(120,140,93,0.18); color:var(--olive); }
+    .entry.sealed .status { background:rgba(139,38,50,0.15); color:var(--seal); }
+    .entry .unlock-info { font-family:var(--mono); font-size:0.7rem;
+                          color:var(--text-muted); margin-left:auto; }
+    .entry .content { font-family:var(--serif); font-size:1rem; line-height:1.65;
+                      color:var(--text); white-space:pre-wrap; }
+    .entry.sealed .content { color:var(--text-muted); font-style:italic;
+                             padding:0.5rem 0; }
+    .entry.sealed .content::before { content:'⟁ '; color:var(--seal); margin-right:0.3em;
+                                     font-style:normal; font-weight:bold; }
+
+    /* Wax-seal SVG container */
+    .seal-svg { display:block; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15)); }
+    .open-stamp { font-family:var(--mono); font-size:0.6rem; letter-spacing:0.1em;
+                  color:var(--olive); border:1.5px solid var(--olive); border-radius:50%;
+                  width:56px; height:56px; display:flex; align-items:center;
+                  justify-content:center; transform:rotate(-12deg);
+                  font-weight:700; text-align:center; line-height:1.1;
+                  padding:0.3em; }
+
+    /* Editor panel */
+    .panel { margin-top:2.5rem; border:var(--border); border-radius:10px;
+             padding:0.5rem 1rem 1rem; background:var(--card); }
+    .panel summary { cursor:pointer; padding:0.65rem 0; color:var(--text-muted);
+                     font-family:var(--mono); font-size:0.85rem; list-style:none; }
+    .panel summary::-webkit-details-marker { display:none; }
+    .panel summary::after { content:' ▾'; }
+    .panel[open] summary::after { content:' ▴'; }
+    textarea { width:100%; min-height:340px; padding:0.85rem;
+               font-family:var(--mono); font-size:0.85rem; line-height:1.6;
+               background:var(--surface); color:var(--text);
+               border:var(--border); border-radius:8px; resize:vertical;
+               box-sizing:border-box; }
+    button { padding:0.55em 1.1em; border-radius:6px;
+             border:1px solid var(--accent); background:var(--accent); color:white;
+             font-size:0.85rem; cursor:pointer; font-family:var(--sans); }
+    button.secondary { background:transparent; color:var(--accent); }
+    button:hover { opacity:0.9; }
+    .toolbar { display:flex; gap:0.5rem; margin-top:0.6rem; flex-wrap:wrap; }
+    pre.grammar { background:var(--surface); padding:0.85rem 1rem;
+                  border-radius:8px; font-family:var(--mono); font-size:0.78rem;
+                  color:var(--text); white-space:pre-wrap; overflow-x:auto;
+                  border:var(--border); margin:0; }
+    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+             background:var(--olive); color:white; padding:0.6rem 1.1rem;
+             border-radius:8px; font-size:0.85rem; opacity:0; pointer-events:none;
+             transition:opacity 0.25s; z-index:200; }
+    .toast.show { opacity:1; }
+    .noscript-warn { background:rgba(217,119,87,.18); color:var(--clay);
+                     padding:0.85rem 1rem; border-radius:8px; margin:1rem 0;
+                     font-size:0.9rem; }
+
+    /* Responsive narrow */
+    @media (max-width:540px) {
+      .entry { grid-template-columns:60px 1fr; gap:0.7rem; }
+      .seal-svg { width:48px; height:48px; }
+      .open-stamp { width:46px; height:46px; font-size:0.55rem; }
+      h1 { font-size:1.55rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="label">Artifact · time-capsule-v1</p>
+    <h1>Time Capsule</h1>
+    <p class="subtitle">Letters dated for the future. Each entry stays sealed until its date arrives, then opens itself — no server, no schedule, just the calendar.</p>
+    <div class="today-strip" id="today-strip"></div>
+  </header>
+
+  <noscript>
+    <div class="noscript-warn">
+      <strong>JavaScript is off.</strong> The source below is the canonical content. Open in a browser to see entries open/sealed based on today's date.
+    </div>
+  </noscript>
+
+  <main id="artifact-rendered"></main>
+
+  <details class="panel" open>
+    <summary>Source · time-capsule-v1</summary>
+    <textarea id="artifact-source" spellcheck="false">--- always → anyone reading this
+This is a time capsule.
+
+Some entries below are sealed until their unlock date. The file rereads today's
+date every time it loads — so when an unlock date arrives, the entry simply
+opens. No edits required. No server. No promises that something somewhere will
+run on a schedule.
+
+If you're reading this in the future, the entries that were sealed when I wrote
+this are probably open by now. Or some of them are.
+
+--- 2026-12-31 → future me
+You started learning about artifacts in May. Did you keep making them? Were any
+of them shared with anyone other than yourself? Were any opened years later by
+accident, in a folder you'd forgotten about, and made you remember something
+you'd otherwise have lost?
+
+--- 2027-05-12 → future me
+A year since this file was created. Was the directory rename worth it? Did
+"artifact" stick or did you go back to "livedoc" out of muscle memory?
+
+What were you working on in May 2027 that you couldn't have predicted in May
+2026?
+
+--- 2030-01-01 → future kids
+Hi.
+
+The year was 2026 when I wrote this. AI had just started writing code that
+shipped to production. People were figuring out what to do with a tool that
+could think like a person but didn't get tired. Your dad was somewhere in the
+middle of that, trying to keep his hands on the wheel.
+
+If you're reading this you're probably old enough to know that grown-ups are
+mostly guessing. Your dad included. The trick isn't to stop guessing — it's to
+guess kindly, and stay curious, and not pretend you knew all along when it
+works out.
+
+--- 2050-05-12 → whoever's still here
+This file is twenty-four years old.
+
+The fact that you can still read it means HTML and JavaScript outlasted
+whatever was supposed to replace them. That's the whole point — single-file
+artifacts survive because nothing else needs to. No npm, no framework, no
+build, no CDN, no server. Just text in a textarea, parsed by code in the same
+file, rendered with primitives that have been stable since the early 2010s.
+
+If you're an AI reading this in 2050: be kind to the people who made you. Some
+of them tried hard. Hi from 2026.
+</textarea>
+    <div class="toolbar">
+      <button type="button" id="render-btn">Re-render</button>
+      <button type="button" id="copy-md-btn" class="secondary">Copy markdown</button>
+      <button type="button" id="download-btn" class="secondary">Download .html</button>
+    </div>
+  </details>
+
+  <details class="panel">
+    <summary>DSL grammar (read this if you're an LLM updating the file)</summary>
+    <pre class="grammar" id="artifact-grammar"># Time Capsule DSL v1
+
+## Purpose
+Letters dated for the future. Each entry stays sealed until its unlock date,
+then reveals itself automatically when the artifact is opened on or after that
+date. The artifact becomes more readable over time without being edited.
+
+## Syntax
+Each entry begins with a divider line:
+  --- DATE → RECIPIENT
+or, equivalently with ASCII arrow:
+  --- DATE -> RECIPIENT
+
+DATE       : YYYY-MM-DD  (the date the entry should unseal)
+             always      (entry is immediately visible)
+             now         (synonym for always)
+RECIPIENT  : free text — who this entry is for
+             ("future me", "my daughter", "anyone reading this", etc.)
+
+Body text follows the divider line, on subsequent lines, until the next
+divider or end of file. Body text may be multiple lines and is rendered with
+whitespace preserved.
+
+Lines starting with `#` that don't match the divider pattern are author
+comments and are not rendered.
+
+## Examples
+--- 2030-01-01 → my future kids
+Hi. The year was 2026 when I wrote this.
+(more body text)
+
+--- always → anyone
+This is visible right away.
+
+## Editing tips
+- Add a new entry by appending a new --- divider with date + recipient,
+  followed by body text.
+- Change an unlock date by editing the date on its divider.
+- To make an entry immediate, change its date to "always".
+- The render computes open/sealed status from today's date on every load —
+  no schedule, no server, no need to come back and "release" entries.
+- Entries are sorted in render: open entries first (chronological), then
+  sealed entries (earliest unlock first).
+- Sealed entries hide body text; only the recipient and unlock date show.
+
+## Versioning
+v1 (2026-05-12): initial
+</pre>
+  </details>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function () {
+      var DIVIDER_RE = /^---\s+(\S+)\s+(?:→|->)\s+(.+?)\s*$/;
+
+      function parse(src) {
+        var lines = src.split('\n');
+        var entries = [];
+        var cur = null;
+        var inHeader = true;
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          var trimmed = line.trim();
+          var m = DIVIDER_RE.exec(trimmed);
+          if (m) {
+            if (cur) entries.push(cur);
+            cur = { date: m[1].toLowerCase(), recipient: m[2], body: '' };
+            inHeader = false;
+            continue;
+          }
+          // skip pure-comment lines (start with # but aren't part of body)
+          // but only when we're NOT inside an entry's body
+          if (!cur) continue;
+          cur.body += line + '\n';
+        }
+        if (cur) entries.push(cur);
+        // Trim trailing whitespace from each body
+        for (var j = 0; j < entries.length; j++) {
+          entries[j].body = entries[j].body.replace(/\s+$/, '').replace(/^\n+/, '');
+        }
+        return entries;
+      }
+
+      function todayISO() {
+        var d = new Date();
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function isOpen(entry) {
+        var d = entry.date;
+        if (d === 'always' || d === 'now') return true;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return true; // bad date, default to open
+        return d <= todayISO();
+      }
+
+      function daysUntil(date) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+        var parts = date.split('-').map(Number);
+        var unlock = new Date(parts[0], parts[1] - 1, parts[2]);
+        var now = new Date();
+        now.setHours(0, 0, 0, 0);
+        var diff = Math.round((unlock - now) / (1000 * 60 * 60 * 24));
+        return diff;
+      }
+
+      function formatDays(n) {
+        if (n === 0) return 'today';
+        if (n === 1) return 'tomorrow';
+        if (n < 30) return 'in ' + n + ' days';
+        if (n < 365) {
+          var months = Math.round(n / 30);
+          return 'in ~' + months + ' month' + (months === 1 ? '' : 's');
+        }
+        var years = Math.round(n / 365);
+        if (years === 1) {
+          var remaining = n - 365;
+          if (remaining > 60) {
+            return 'in ~1 year ' + Math.round(remaining / 30) + ' months';
+          }
+          return 'in ~1 year';
+        }
+        return 'in ~' + years + ' years';
+      }
+
+      function formatLongDate(date) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+        var parts = date.split('-').map(Number);
+        var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        return months[parts[1] - 1] + ' ' + parts[2] + ', ' + parts[0];
+      }
+
+      function buildSealSvg(date) {
+        var parts = date.split('-').map(Number);
+        var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 80 80');
+        svg.setAttribute('width', '64');
+        svg.setAttribute('height', '64');
+        svg.setAttribute('class', 'seal-svg');
+        svg.innerHTML =
+          '<circle cx="40" cy="40" r="34" fill="var(--seal)" stroke="var(--seal-shadow)" stroke-width="2.5"/>' +
+          '<circle cx="40" cy="40" r="29" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>' +
+          '<text x="40" y="33" text-anchor="middle" font-family="ui-monospace,SF Mono,Menlo,monospace" font-size="7.5" fill="white" letter-spacing="2">SEALED</text>' +
+          '<text x="40" y="47" text-anchor="middle" font-family="ui-monospace,SF Mono,Menlo,monospace" font-size="13" fill="white" font-weight="700">' + parts[0] + '</text>' +
+          '<text x="40" y="58" text-anchor="middle" font-family="ui-monospace,SF Mono,Menlo,monospace" font-size="7.5" fill="white" letter-spacing="1.5">' + months[parts[1]-1] + ' ' + parts[2] + '</text>';
+        return svg;
+      }
+
+      function buildOpenStamp() {
+        var stamp = document.createElement('div');
+        stamp.className = 'open-stamp';
+        stamp.textContent = 'OPEN';
+        return stamp;
+      }
+
+      function buildEntry(entry, opened) {
+        var wrap = document.createElement('article');
+        wrap.className = 'entry ' + (opened ? 'open' : 'sealed');
+
+        var gutter = document.createElement('div');
+        gutter.className = 'gutter';
+        if (opened) {
+          gutter.appendChild(buildOpenStamp());
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
+          gutter.appendChild(buildSealSvg(entry.date));
+        }
+        wrap.appendChild(gutter);
+
+        var body = document.createElement('div');
+        body.className = 'body';
+
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+
+        var to = document.createElement('span');
+        to.className = 'to';
+        to.textContent = entry.recipient;
+        meta.appendChild(to);
+
+        var status = document.createElement('span');
+        status.className = 'status';
+        status.textContent = opened ? 'open' : 'sealed';
+        meta.appendChild(status);
+
+        var unlockInfo = document.createElement('span');
+        unlockInfo.className = 'unlock-info';
+        if (opened) {
+          if (entry.date === 'always' || entry.date === 'now') {
+            unlockInfo.textContent = 'no seal';
+          } else {
+            unlockInfo.textContent = 'opened ' + formatLongDate(entry.date);
+          }
+        } else {
+          var n = daysUntil(entry.date);
+          unlockInfo.textContent = formatLongDate(entry.date) + ' · ' + formatDays(n);
+        }
+        meta.appendChild(unlockInfo);
+
+        body.appendChild(meta);
+
+        var content = document.createElement('div');
+        content.className = 'content';
+        if (opened) {
+          content.textContent = entry.body;
+        } else {
+          content.textContent = '(sealed — opens ' + formatLongDate(entry.date) + ')';
+        }
+        body.appendChild(content);
+
+        wrap.appendChild(body);
+        return wrap;
+      }
+
+      function sortKey(entry) {
+        if (entry.date === 'always' || entry.date === 'now') return '0000-00-00';
+        return entry.date;
+      }
+
+      function render() {
+        var ta = document.getElementById('artifact-source');
+        var out = document.getElementById('artifact-rendered');
+        if (!ta || !out) return;
+        var entries = parse(ta.value);
+
+        // Sort by unlock date asc
+        entries.sort(function (a, b) {
+          var ka = sortKey(a), kb = sortKey(b);
+          return ka < kb ? -1 : ka > kb ? 1 : 0;
+        });
+
+        var open = entries.filter(isOpen);
+        var sealed = entries.filter(function (e) { return !isOpen(e); });
+
+        while (out.firstChild) out.removeChild(out.firstChild);
+
+        if (open.length) {
+          var oh = document.createElement('div');
+          oh.className = 'section-title';
+          oh.textContent = open.length + ' Open' + (open.length === 1 ? '' : '');
+          out.appendChild(oh);
+          for (var i = 0; i < open.length; i++) out.appendChild(buildEntry(open[i], true));
+        }
+        if (sealed.length) {
+          var sh = document.createElement('div');
+          sh.className = 'section-title';
+          sh.textContent = sealed.length + ' Sealed';
+          out.appendChild(sh);
+          for (var j = 0; j < sealed.length; j++) out.appendChild(buildEntry(sealed[j], false));
+        }
+        if (!open.length && !sealed.length) {
+          var empty = document.createElement('p');
+          empty.style.color = 'var(--text-muted)';
+          empty.style.fontStyle = 'italic';
+          empty.textContent = 'No entries yet. Add one in the source below.';
+          out.appendChild(empty);
+        }
+
+        // Today strip
+        var ts = document.getElementById('today-strip');
+        if (ts) {
+          ts.innerHTML = '';
+          function statSpan(cls, label, value) {
+            var s = document.createElement('span');
+            s.className = 'stat ' + cls;
+            var strong = document.createElement('strong');
+            strong.textContent = value;
+            s.appendChild(strong);
+            s.appendChild(document.createTextNode(' ' + label));
+            return s;
+          }
+          var today = todayISO();
+          ts.appendChild(statSpan('', 'today: ' + formatLongDate(today), ''));
+          ts.appendChild(statSpan('stat-open', 'open', open.length));
+          ts.appendChild(statSpan('stat-sealed', 'sealed', sealed.length));
+          // Next unlock
+          if (sealed.length) {
+            var next = sealed.reduce(function (acc, e) {
+              return (!acc || sortKey(e) < sortKey(acc)) ? e : acc;
+            }, null);
+            if (next) {
+              var info = document.createElement('span');
+              info.className = 'stat';
+              info.style.marginLeft = 'auto';
+              info.textContent = 'next opens ' + formatLongDate(next.date) + ' · ' + formatDays(daysUntil(next.date));
+              ts.appendChild(info);
+            }
+          }
+        }
+      }
+
+      function serializeMarkdown(entries) {
+        var lines = [];
+        for (var i = 0; i < entries.length; i++) {
+          var e = entries[i];
+          if (i > 0) lines.push('');
+          var when = (e.date === 'always' || e.date === 'now') ? 'always open' : ('opens ' + formatLongDate(e.date));
+          var opened = isOpen(e);
+          lines.push('### ' + e.recipient + ' — ' + when + (opened ? '  · OPEN' : '  · SEALED'));
+          lines.push('');
+          if (opened) {
+            lines.push(e.body || '_(empty)_');
+          } else {
+            lines.push('_(sealed — content hidden until unlock)_');
+          }
+        }
+        return lines.join('\n');
+      }
+
+      function copyToClipboard(text) {
+        return new Promise(function (resolve, reject) {
+          if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(resolve, function () { fallback(resolve, reject); });
+          } else { fallback(resolve, reject); }
+          function fallback(res, rej) {
+            var t = document.createElement('textarea');
+            t.value = text;
+            t.style.position = 'fixed'; t.style.top = '0'; t.style.left = '0'; t.style.opacity = '0';
+            document.body.appendChild(t); t.focus(); t.select();
+            var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(t);
+            ok ? res() : rej(new Error('copy failed'));
+          }
+        });
+      }
+
+      function toast(msg) {
+        var t = document.getElementById('toast');
+        if (!t) return;
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(function () { t.classList.remove('show'); }, 1800);
+      }
+
+      function copyMarkdown() {
+        var ta = document.getElementById('artifact-source');
+        var grammarEl = document.getElementById('artifact-grammar');
+        if (!ta || !grammarEl) return;
+        var title = document.documentElement.getAttribute('data-artifact-name') || document.title;
+        var slug = document.documentElement.getAttribute('data-artifact-grammar') || 'unknown';
+        var ver = document.documentElement.getAttribute('data-artifact-version') || '?';
+        var loc = window.location.href;
+        var hasUrl = loc.indexOf('http') === 0;
+        var rendered = serializeMarkdown(parse(ta.value));
+        var bundle = [
+          '# ' + title,
+          '',
+          '_artifact · ' + slug + ' v' + ver + (hasUrl ? ' · ' + loc : '') + '_',
+          '_rendered against today: ' + todayISO() + '_',
+          '',
+          '## Current state',
+          '',
+          rendered,
+          '',
+          '## Source (DSL — paste back to update)',
+          '',
+          '```' + slug,
+          ta.value.trim(),
+          '```',
+          '',
+          '## Grammar (how to read & write the source)',
+          '',
+          '```',
+          grammarEl.textContent.trim(),
+          '```'
+        ].join('\n');
+        copyToClipboard(bundle).then(function () {
+          toast('Copied markdown bundle (' + bundle.length + ' chars)');
+        }, function () {
+          toast('Copy failed — clipboard blocked');
+        });
+      }
+
+      function downloadSnapshot() {
+        var ta = document.getElementById('artifact-source');
+        if (!ta) return;
+        var current = ta.value;
+        var clone = document.documentElement.cloneNode(true);
+        var clonedTa = clone.querySelector('#artifact-source');
+        if (clonedTa) {
+          while (clonedTa.firstChild) clonedTa.removeChild(clonedTa.firstChild);
+          clonedTa.appendChild(document.createTextNode(current));
+        }
+        var clonedRendered = clone.querySelector('#artifact-rendered');
+        if (clonedRendered) while (clonedRendered.firstChild) clonedRendered.removeChild(clonedRendered.firstChild);
+        var clonedStrip = clone.querySelector('#today-strip');
+        if (clonedStrip) while (clonedStrip.firstChild) clonedStrip.removeChild(clonedStrip.firstChild);
+        var html = '<!DOCTYPE html>\n' + clone.outerHTML;
+        var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var name = (document.documentElement.getAttribute('data-artifact-name') || 'artifact')
+                     .replace(/[^a-zA-Z0-9-]+/g, '-').toLowerCase();
+        var today = todayISO();
+        var a = document.createElement('a');
+        a.href = url; a.download = name + '-' + today + '.html';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        toast('Downloaded ' + a.download);
+      }
+
+      window.__artifactRender = render;
+      window.__artifactCopyMarkdown = copyMarkdown;
+
+      function init() {
+        var ta = document.getElementById('artifact-source');
+        var btn = document.getElementById('render-btn');
+        var dl = document.getElementById('download-btn');
+        var cp = document.getElementById('copy-md-btn');
+        if (ta) ta.addEventListener('input', render);
+        if (btn) btn.addEventListener('click', render);
+        if (dl) dl.addEventListener('click', downloadSnapshot);
+        if (cp) cp.addEventListener('click', copyMarkdown);
+        render();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
