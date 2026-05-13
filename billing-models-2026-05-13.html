@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-artifact-name="Agent-based billing models"
+      data-artifact-grammar="decision-explore-v1"
+      data-artifact-version="1"
+      data-artifact-created="2026-05-13"
+      data-artifact-author="jbwashington">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent-based billing models — interactive playground</title>
+  <style>
+    :root {
+      --bg: #FAF9F5;
+      --surface: #F0EEE6;
+      --card: #FFFFFF;
+      --text: #141413;
+      --text-muted: #87867F;
+      --border: 1.5px solid #D1CFC5;
+      --border-soft: 1px solid #E3DACC;
+      --accent: #5C7CA3;
+      --olive: #788C5D;
+      --clay: #D97757;
+      --danger: #B04A4A;
+      --oat: #E3DACC;
+      --serif: ui-serif, Georgia, serif;
+      --sans: system-ui, -apple-system, sans-serif;
+      --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+      --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f14;
+        --surface: #1a1a2e;
+        --card: #16213e;
+        --text: #e6e7ec;
+        --text-muted: #8b8fa5;
+        --border: 1.5px solid #2a2a3e;
+        --border-soft: 1px solid #232336;
+        --accent: #7c83ff;
+        --olive: #34d399;
+        --clay: #f59e0b;
+        --danger: #f87171;
+        --oat: #1e2040;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+        --shadow-md: 0 4px 10px rgba(0,0,0,.4);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      font-size: 15.5px;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 5rem;
+    }
+
+    h1, h2, h3 { font-family: var(--serif); font-weight: 600; }
+    h1 { font-size: 1.8rem; margin: 0 0 0.4rem; line-height: 1.2; }
+    h2 { font-size: 1.3rem; margin: 2.5rem 0 0.85rem; }
+    h3 { font-size: 1.05rem; margin: 1.1rem 0 0.45rem; }
+    p { margin: 0 0 0.65rem; }
+    a { color: var(--accent); }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: var(--oat);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+    }
+
+    .label {
+      font-size: 0.7rem;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--r-lg);
+      padding: 1.1rem 1.2rem;
+      margin-bottom: 1rem;
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .card.accent  { border-left: 3px solid var(--accent); }
+    .card.success { border-left: 3px solid var(--olive); }
+    .card.warn    { border-left: 3px solid var(--clay); }
+    .card.danger  { border-left: 3px solid var(--danger); }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0.18em 0.55em;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      font-family: var(--mono);
+      background: var(--oat);
+      color: var(--text-muted);
+    }
+    .chip.olive  { background: color-mix(in srgb, var(--olive) 18%, transparent); color: var(--olive); }
+    .chip.clay   { background: color-mix(in srgb, var(--clay)  18%, transparent); color: var(--clay); }
+    .chip.danger { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+    .chip.accent { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+
+    .pros-cons li {
+      list-style: none;
+      padding: 0.45rem 0.7rem;
+      border-radius: var(--r-sm);
+      background: var(--surface);
+      font-size: 0.88rem;
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
+      margin: 0.35rem 0;
+    }
+    .pros-cons li::before {
+      flex-shrink: 0;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      width: 0.9rem;
+    }
+    .pros li::before { content: "+"; color: var(--olive); }
+    .cons li::before { content: "−"; color: var(--clay); }
+    .pros-cons ul { padding: 0; margin: 0; }
+
+    /* ── Playground ────────────────────────────────────────── */
+
+    .totals-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.65rem;
+      margin: 1rem 0 1.25rem;
+    }
+    .total-card {
+      background: var(--card);
+      border: var(--border);
+      border-radius: var(--r-md);
+      padding: 0.75rem 0.85rem;
+      position: relative;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .total-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+    .total-card .label { font-size: 0.62rem; }
+    .total-card .value {
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.15rem;
+      letter-spacing: -0.01em;
+    }
+    .total-card .sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      margin-top: 0.15rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin: 0.85rem 0 1.2rem;
+    }
+    .control {
+      background: var(--surface);
+      border-radius: var(--r-md);
+      padding: 0.8rem 0.9rem;
+      border: var(--border-soft);
+    }
+    .control label { font-size: 0.78rem; font-weight: 600; }
+    .control .val {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      float: right;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-top: 0.4rem;
+      accent-color: var(--accent);
+    }
+    .control .hint {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    .tier-rates {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+      margin: 0.85rem 0 1.2rem;
+    }
+    .tier-rate {
+      background: var(--surface);
+      border-radius: var(--r-sm);
+      padding: 0.55rem 0.7rem;
+      border-top: 3px solid;
+      font-size: 0.85rem;
+    }
+    .tier-rate input {
+      width: 100%;
+      border: var(--border-soft);
+      background: var(--card);
+      color: var(--text);
+      padding: 0.3rem 0.45rem;
+      border-radius: var(--r-sm);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+    .tier-rate input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+    .tier-rate .tier-name { font-weight: 600; font-size: 0.8rem; }
+    .tier-junior    { border-top-color: var(--text-muted); }
+    .tier-standard  { border-top-color: var(--accent); }
+    .tier-senior    { border-top-color: var(--olive); }
+    .tier-strategic { border-top-color: var(--clay); }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+      margin: 0.5rem 0 0.5rem;
+    }
+    .column {
+      min-height: 180px;
+      background: var(--surface);
+      border-radius: var(--r-md);
+      padding: 0.55rem;
+      border-top: 3px solid;
+      transition: outline 0.1s, background 0.1s;
+    }
+    .column-junior    { border-top-color: var(--text-muted); }
+    .column-standard  { border-top-color: var(--accent); }
+    .column-senior    { border-top-color: var(--olive); }
+    .column-strategic { border-top-color: var(--clay); }
+    .column-header {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .session {
+      background: var(--card);
+      border: var(--border-soft);
+      border-radius: var(--r-sm);
+      padding: 0.5rem 0.6rem;
+      margin-bottom: 0.45rem;
+      font-size: 0.8rem;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.1s, box-shadow 0.1s, opacity 0.15s;
+    }
+    .session:active { cursor: grabbing; }
+    .session:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .session.dragging { opacity: 0.35; }
+    .session .s-title { font-weight: 600; line-height: 1.25; margin-bottom: 0.2rem; }
+    .session .s-meta {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .session .s-meta .async-flag {
+      color: var(--clay);
+      font-weight: 600;
+    }
+    .session .s-repo {
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      margin-top: 0.15rem;
+      opacity: 0.7;
+    }
+
+    .async-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      padding: 0.55rem 0.8rem;
+      background: var(--surface);
+      border-radius: var(--r-sm);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Tradeoff section ──────────────────────────────────── */
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* ── Flow diagram ──────────────────────────────────────── */
+
+    .flow-svg {
+      width: 100%;
+      max-width: 720px;
+      margin: 1rem auto;
+      display: block;
+    }
+
+    /* ── Mobile ────────────────────────────────────────────── */
+
+    @media (max-width: 760px) {
+      body { padding: 1.25rem 0.9rem 3rem; font-size: 15px; }
+      h1 { font-size: 1.45rem; }
+      h2 { font-size: 1.15rem; margin-top: 1.85rem; }
+      .totals-strip { grid-template-columns: 1fr 1fr; }
+      .controls, .tier-rates, .kanban, .model-grid { grid-template-columns: 1fr; }
+      .kanban .column { min-height: 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="label">Decision exploration · for Aisha &amp; JB</p>
+  <h1>How should an agent bill for itself?</h1>
+  <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+    A drag-around playground for the four billing models we're choosing between,
+    using real session snapshots from <code>~/.claude/billing/sessions/</code>.
+    Move sessions between tiers, slide multipliers, watch totals change.
+  </p>
+  <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin:0.6rem 0 0;">
+    <span class="chip accent">interactive</span>
+    <span class="chip">real session data</span>
+    <span class="chip">no auto-save — open as many tabs as you want</span>
+  </div>
+</header>
+
+<div class="card accent">
+  <p class="label">The question</p>
+  <p>Async work (overnight scrapers, long-running jobs) breaks hourly billing.
+  Token-cost reflects active intensity but ignores invisible work.
+  <strong>What if the agent billed JB directly</strong>, JB paid out-of-pocket, and reimbursed himself from the client?
+  Does that fix the accountability gap — or just create a worse one?</p>
+</div>
+
+<!-- ═════════════════════ PLAYGROUND ═════════════════════ -->
+
+<h2>Playground — drag and slide</h2>
+
+<div class="totals-strip" id="totals">
+  <div class="total-card" data-model="hourly">
+    <p class="label">Hourly (wall time)</p>
+    <div class="value" data-bind="total-hourly">$0</div>
+    <div class="sub" data-bind="detail-hourly">—</div>
+  </div>
+  <div class="total-card" data-model="token">
+    <p class="label">Token × N</p>
+    <div class="value" data-bind="total-token">$0</div>
+    <div class="sub" data-bind="detail-token">—</div>
+  </div>
+  <div class="total-card" data-model="tiered">
+    <p class="label">Tiered hourly (active time)</p>
+    <div class="value" data-bind="total-tiered">$0</div>
+    <div class="sub" data-bind="detail-tiered">—</div>
+  </div>
+  <div class="total-card" data-model="passthrough">
+    <p class="label">Agent → JB → client</p>
+    <div class="value" data-bind="total-passthrough">$0</div>
+    <div class="sub" data-bind="detail-passthrough">—</div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control">
+    <label>Token multiplier <span class="val" id="mult-val">10×</span></label>
+    <input type="range" id="mult" min="1" max="25" step="1" value="10">
+    <div class="hint">For <strong>Token × N</strong> and the base of <strong>Agent → JB → client</strong>.</div>
+  </div>
+  <div class="control">
+    <label>Client markup <span class="val" id="markup-val">4×</span></label>
+    <input type="range" id="markup" min="1" max="8" step="0.5" value="4">
+    <div class="hint">Multiplier from what the agent bills JB to what JB bills the client. Covers steering, risk, float.</div>
+  </div>
+</div>
+
+<div class="async-toggle">
+  <input type="checkbox" id="active-only" checked>
+  <label for="active-only">
+    <strong>Active time only</strong> — count only API duration, not wall clock
+    (otherwise an 8-hour overnight scraper bills 8 hours)
+  </label>
+</div>
+
+<h3 style="margin-top: 1.5rem;">Tier rates (hourly)</h3>
+<div class="tier-rates">
+  <div class="tier-rate tier-junior">
+    <div class="tier-name">Junior</div>
+    <input type="number" data-tier-rate="junior" value="80" min="0" step="10">
+  </div>
+  <div class="tier-rate tier-standard">
+    <div class="tier-name">Standard</div>
+    <input type="number" data-tier-rate="standard" value="130" min="0" step="10">
+  </div>
+  <div class="tier-rate tier-senior">
+    <div class="tier-name">Senior</div>
+    <input type="number" data-tier-rate="senior" value="180" min="0" step="10">
+  </div>
+  <div class="tier-rate tier-strategic">
+    <div class="tier-name">Strategic</div>
+    <input type="number" data-tier-rate="strategic" value="250" min="0" step="10">
+  </div>
+</div>
+
+<h3>Sessions — drag between tiers</h3>
+<p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.6rem;">
+  Cards are real sessions. <span class="chip clay" style="display:inline-flex;">async</span>
+  means wall time &gt;&gt; active time (probably ran while JB was asleep).
+</p>
+
+<div class="kanban">
+  <div class="column column-junior" data-col="junior">
+    <div class="column-header"><span>Junior</span><span data-col-total="junior">$0</span></div>
+  </div>
+  <div class="column column-standard" data-col="standard">
+    <div class="column-header"><span>Standard</span><span data-col-total="standard">$0</span></div>
+  </div>
+  <div class="column column-senior" data-col="senior">
+    <div class="column-header"><span>Senior</span><span data-col-total="senior">$0</span></div>
+  </div>
+  <div class="column column-strategic" data-col="strategic">
+    <div class="column-header"><span>Strategic</span><span data-col-total="strategic">$0</span></div>
+  </div>
+</div>
+
+<!-- ═════════════════════ MODEL TRADEOFFS ═════════════════════ -->
+
+<h2>The four models, side-by-side</h2>
+
+<div class="model-grid">
+
+  <article class="card warn">
+    <h3 style="margin-top: 0;">1. Hourly (wall time)</h3>
+    <p class="label">Industry default</p>
+    <p style="font-size:0.9rem;"><code>duration_ms × $rate</code></p>
+    <div class="pros-cons pros"><ul>
+      <li>Universal frame — every client knows hourly.</li>
+      <li>Trivially auditable, calendar-shaped.</li>
+      <li>Predictable for the client.</li>
+    </ul></div>
+    <div class="pros-cons cons"><ul>
+      <li><strong>Async kills it.</strong> Overnight scraper = 8 indefensible hours.</li>
+      <li>Anti-parallelism — four tools at once bills like one.</li>
+      <li>Idle time (CI, deploys) bills you, not the client.</li>
+      <li>No signal for steering intensity.</li>
+    </ul></div>
+  </article>
+
+  <article class="card accent">
+    <h3 style="margin-top: 0;">2. Token × N</h3>
+    <p class="label">What the statusline currently shows</p>
+    <p style="font-size:0.9rem;"><code>cost_usd × multiplier</code></p>
+    <div class="pros-cons pros"><ul>
+      <li><strong>Async-immune</strong> — only counts when the model is working.</li>
+      <li>Captures intensity, steering, model choice.</li>
+      <li>Parallel-friendly. Self-scaling.</li>
+      <li>One-line auditable from the snapshot.</li>
+    </ul></div>
+    <div class="pros-cons cons"><ul>
+      <li>Multiplier feels arbitrary without an anchor.</li>
+      <li>Misses invisible work — calls, planning, post-fixes.</li>
+      <li>Bills move with Anthropic's prices.</li>
+      <li>"What's a multiplier?" → client confusion.</li>
+    </ul></div>
+  </article>
+
+  <article class="card success">
+    <h3 style="margin-top: 0;">3. Tiered hourly (active time only)</h3>
+    <p class="label">Hourly that doesn't punish you for sleeping</p>
+    <p style="font-size:0.9rem;"><code>api_duration × tier_rate</code> per session</p>
+    <div class="pros-cons pros"><ul>
+      <li>Looks like normal consulting hourly to the client.</li>
+      <li>Async-immune — only the active portion counts.</li>
+      <li>Lets you charge more for strategic work (refactors, architecture) and less for boilerplate.</li>
+      <li>Easy mental model for both sides.</li>
+    </ul></div>
+    <div class="pros-cons cons"><ul>
+      <li>Tier assignment is judgment — open to dispute.</li>
+      <li>Need to label every session (the drag bit). Friction.</li>
+      <li>API duration isn't quite "effort" — fast tools-only sessions undercount steering.</li>
+      <li>Still doesn't catch off-Claude work without manual line items.</li>
+    </ul></div>
+  </article>
+
+  <article class="card danger">
+    <h3 style="margin-top: 0;">4. Agent → JB → client</h3>
+    <p class="label">JB's wildcard idea</p>
+    <p style="font-size:0.9rem;">Agent bills JB at token × N. JB bills client at agent_bill × markup.</p>
+    <div class="pros-cons pros"><ul>
+      <li><strong>Skin-in-the-game.</strong> JB won't run sessions he wouldn't pay for himself. Forces scope discipline.</li>
+      <li><strong>Quality gate.</strong> Bad sessions get filtered before they hit the client.</li>
+      <li><strong>Real-money pause.</strong> Wallet empty? No work runs. "Fair business" enforced mechanically.</li>
+      <li>Three-way alignment — agent serves JB (paying customer), JB serves client (real reimbursement risk).</li>
+      <li>Markup justifies itself — covers judgment, risk absorption, float cost.</li>
+    </ul></div>
+    <div class="pros-cons cons"><ul>
+      <li><strong>Capital tied up</strong> until reimbursement. Cashflow burden on JB.</li>
+      <li>Client could refuse reimbursement — JB eats the loss.</li>
+      <li>Two invoices to track. Accounting complexity.</li>
+      <li>Slower client turnaround (extra hop).</li>
+      <li>"I have to pay before my agent works for me" can feel adversarial if not framed right.</li>
+      <li>Tax pass-through implications — talk to an accountant.</li>
+    </ul></div>
+  </article>
+
+</div>
+
+<!-- ═════════════════════ DEEP DIVE: AGENT BILLS JB ═════════════════════ -->
+
+<h2>Deep dive — agent bills JB, JB reimbursed by client</h2>
+
+<div class="card accent">
+  <p class="label">The accountability claim</p>
+  <p>"No work gets done until fair business is being done." Three places this enforces itself:</p>
+  <ul style="margin: 0.4rem 0 0 1.25rem; padding: 0; font-size: 0.92rem;">
+    <li><strong>Before starting.</strong> Pre-flight estimate; if wallet is empty or scope is fuzzy, agent declines until it's resolved.</li>
+    <li><strong>During work.</strong> Live running tab in the statusline. JB sees the meter and can stop the agent before runaway.</li>
+    <li><strong>After delivery.</strong> Until the client's prior invoice clears, the wallet refills slowly. New work for that client slows down — natural pressure.</li>
+  </ul>
+</div>
+
+<svg class="flow-svg" viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow-dark" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M1,1 L8,4 L1,7 L3,4 Z" fill="#87867F"/>
+    </marker>
+    <marker id="arrow-money" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M1,1 L8,4 L1,7 L3,4 Z" fill="#788C5D"/>
+    </marker>
+    <marker id="arrow-warn" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M1,1 L8,4 L1,7 L3,4 Z" fill="#D97757"/>
+    </marker>
+  </defs>
+
+  <!-- Boxes -->
+  <g>
+    <rect x="40"  y="100" width="140" height="80" rx="10" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="110" y="135" text-anchor="middle" font-family="var(--mono)" font-size="13" fill="var(--text)">Agent</text>
+    <text x="110" y="155" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text-muted)">does the work</text>
+  </g>
+
+  <g>
+    <rect x="290" y="100" width="140" height="80" rx="10" fill="var(--card)" stroke="var(--clay)" stroke-width="1.5"/>
+    <text x="360" y="135" text-anchor="middle" font-family="var(--mono)" font-size="13" fill="var(--text)">JB (operator)</text>
+    <text x="360" y="155" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text-muted)">steers + absorbs risk</text>
+  </g>
+
+  <g>
+    <rect x="540" y="100" width="140" height="80" rx="10" fill="var(--card)" stroke="var(--olive)" stroke-width="1.5"/>
+    <text x="610" y="135" text-anchor="middle" font-family="var(--mono)" font-size="13" fill="var(--text)">Client</text>
+    <text x="610" y="155" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--text-muted)">reimburses + markup</text>
+  </g>
+
+  <!-- Arrows: agent → JB (invoice) -->
+  <line x1="185" y1="130" x2="285" y2="130" stroke="#87867F" stroke-width="1.5" marker-end="url(#arrow-dark)"/>
+  <text x="235" y="122" text-anchor="middle" font-size="10" fill="var(--text-muted)" font-family="var(--mono)">invoice (token × N)</text>
+
+  <!-- Arrows: JB → agent (payment) -->
+  <line x1="285" y1="155" x2="185" y2="155" stroke="#788C5D" stroke-width="1.5" marker-end="url(#arrow-money)"/>
+  <text x="235" y="172" text-anchor="middle" font-size="10" fill="var(--olive)" font-family="var(--mono)">$ paid (out of pocket)</text>
+
+  <!-- Arrows: JB → client (invoice) -->
+  <line x1="435" y1="130" x2="535" y2="130" stroke="#87867F" stroke-width="1.5" marker-end="url(#arrow-dark)"/>
+  <text x="485" y="122" text-anchor="middle" font-size="10" fill="var(--text-muted)" font-family="var(--mono)">invoice (× markup)</text>
+
+  <!-- Arrows: client → JB (payment) -->
+  <line x1="535" y1="155" x2="435" y2="155" stroke="#788C5D" stroke-width="1.5" marker-end="url(#arrow-money)"/>
+  <text x="485" y="172" text-anchor="middle" font-size="10" fill="var(--olive)" font-family="var(--mono)">$ reimburses</text>
+
+  <!-- Gate / Wallet check (above JB) -->
+  <g>
+    <rect x="310" y="30" width="100" height="40" rx="8" fill="var(--surface)" stroke="var(--clay)" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="360" y="55" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--clay)">wallet check</text>
+  </g>
+  <line x1="360" y1="70" x2="360" y2="98" stroke="#D97757" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrow-warn)"/>
+
+  <!-- Caption -->
+  <text x="360" y="245" text-anchor="middle" font-family="var(--serif)" font-size="13" fill="var(--text-muted)" font-style="italic">
+    Agent won't start new work while JB's wallet is dry (i.e. prior client hasn't reimbursed).
+  </text>
+</svg>
+
+<h3>Implementation suggestions, ranked by how far down the rabbit hole</h3>
+
+<div class="card">
+  <h3 style="margin-top: 0;">a. Light — pre-flight estimate gate</h3>
+  <p style="font-size:0.9rem; margin-bottom: 0.4rem;">
+    At session start, agent estimates token cost based on past sessions in the same repo
+    (median × multiplier). Shows: "This will probably cost ~$X.XX. You'll bill the client ~$Y.YY. Continue?"
+  </p>
+  <p style="font-size:0.85rem; color:var(--text-muted); margin: 0;">
+    Lift: small. Just a wrapper hook on session start. Catches the worst overruns without infrastructure.
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top: 0;">b. Medium — wallet ledger</h3>
+  <p style="font-size:0.9rem; margin-bottom: 0.4rem;">
+    A real balance in <code>~/.claude/billing/wallet.json</code>. Topped up when client reimbursement clears (manual update or Stripe webhook). Debited per session. Statusline shows balance. Empty wallet = polite refusal.
+  </p>
+  <p style="font-size:0.85rem; color:var(--text-muted); margin: 0;">
+    Lift: medium. Needs wallet schema, top-up flow, debit hook, and a Stripe payment_received webhook to auto-refill. But this is the model that mechanically enforces "no work without fair business."
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top: 0;">c. Medium — tiered authorization</h3>
+  <p style="font-size:0.9rem; margin-bottom: 0.4rem;">
+    Sessions under $5 estimated cost: auto-run. $5–30: confirm via AskUserQuestion. $30+: require an SOW reference (a string the client agreed to in advance, e.g. ticket ID).
+  </p>
+  <p style="font-size:0.85rem; color:var(--text-muted); margin: 0;">
+    Lift: medium. Useful even without the wallet — keeps you honest about scope.
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top: 0;">d. Heavy — two-sided ledger</h3>
+  <p style="font-size:0.9rem; margin-bottom: 0.4rem;">
+    Track both agent→JB invoices AND JB→client invoices in one view. Reconciliation report shows per-client P&amp;L: cost from agent, billed to client, paid by client, outstanding float.
+    This is what shows up in the HTML artifact JB shares with the client.
+  </p>
+  <p style="font-size:0.85rem; color:var(--text-muted); margin: 0;">
+    Lift: heavy. But this is the dashboard that closes the loop — turns "I think we're profitable on Aisha's account" into a number.
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top: 0;">e. Heavy — reimbursement gating</h3>
+  <p style="font-size:0.9rem; margin-bottom: 0.4rem;">
+    Agent refuses new work for client X if JB's invoice to X is &gt; N days past due.
+    Combined with the wallet, this means the system stops digging the hole deeper when a client goes slow on payments.
+  </p>
+  <p style="font-size:0.85rem; color:var(--text-muted); margin: 0;">
+    Lift: heavy. Needs the two-sided ledger first. But this is what turns "no work without fair business" from a slogan into a property.
+  </p>
+</div>
+
+<!-- ═════════════════════ OPEN QUESTIONS ═════════════════════ -->
+
+<h2>Open questions for Aisha</h2>
+
+<div class="card warn">
+  <ol style="margin: 0 0 0 1.1rem; padding: 0; font-size: 0.95rem;">
+    <li style="margin-bottom: 0.55rem;"><strong>Is the markup defensible to the client?</strong> 4× sounds spicy in the abstract, but it's covering: judgment, risk absorption (you might never get reimbursed for a bad session), and the float (your money tied up). What multiplier does the math say is fair?</li>
+    <li style="margin-bottom: 0.55rem;"><strong>Disclosure.</strong> Do clients know the agent costs $X and they're paying Y? Or do they just see "engineering hours"? Either is defensible — pick deliberately.</li>
+    <li style="margin-bottom: 0.55rem;"><strong>Wallet seed.</strong> If we go wallet-based, what's the opening balance? Self-funded float, retainer from each client, or pure pay-as-you-go that refuses every first session?</li>
+    <li style="margin-bottom: 0.55rem;"><strong>Failed reimbursement policy.</strong> When a client refuses (or just doesn't pay), what happens? Write off, send to collections, blacklist, escalate? This is the bit that turns "skin in the game" from a feature into a liability.</li>
+    <li><strong>Tax treatment.</strong> Pass-through structure changes whether the agent's cost is a deductible expense for JB. Worth one call with the accountant before any of this is real.</li>
+  </ol>
+</div>
+
+<aside class="card accent">
+  <p class="label">Recommendation if we have to ship one thing tomorrow</p>
+  <p style="margin-bottom: 0.4rem;">
+    Start with <strong>Token × N for the agent's bill to JB</strong> + <strong>tiered hourly for JB's bill to the client</strong>, drag-tier-assigned per session in this UI.
+    That's the cleanest two-invoice setup: machine-honest on one side, client-legible on the other.
+  </p>
+  <p style="margin-bottom: 0;">
+    Layer (a) pre-flight estimate first. (b) wallet next when there's a client where it matters. (c)/(d)/(e) only if the first two are working and we still feel exposed.
+  </p>
+</aside>
+
+<footer style="margin-top: 3rem; padding-top: 1.25rem; border-top: var(--border); color: var(--text-muted); font-size: 0.82rem;">
+  <p style="margin:0;">Built from real session snapshots in <code>~/.claude/billing/sessions/</code>. All math is client-side — no telemetry, no server.</p>
+</footer>
+
+<script>
+const SESSIONS = [
+  {id: "dashboard", title: "Dashboard memory leaks", repo: "client/connective-sports",
+   cost: 20.20, wall_ms: 217001793, api_ms: 1139925, tier: "senior"},
+  {id: "migration", title: "Reconcile prod Supabase migration ledger", repo: "client/connective-sports",
+   cost: 24.18, wall_ms: 200488579, api_ms: 1801200, tier: "strategic"},
+  {id: "tg-changelog", title: "Review Telegram changelog for useful features", repo: "iptv-panel/telegram-bot",
+   cost: 28.37, wall_ms: 83083687, api_ms: 4200000, tier: "standard"},
+  {id: "ipt-rev", title: "Reverse engineer IPTV player", repo: "personal/tivimate-reverse-engineer",
+   cost: 24.27, wall_ms: 144714709, api_ms: 3100000, tier: "strategic"},
+  {id: "btcpay", title: "Check Electrum wallet and fund with Bitcoin", repo: "personal/btcpay",
+   cost: 10.80, wall_ms: 111576709, api_ms: 1800000, tier: "junior"},
+  {id: "schools", title: "Add /schools landing page", repo: "orgs/fullstacktechnyc",
+   cost: 5.35, wall_ms: 119178353, api_ms: 950000, tier: "standard"},
+  {id: "gh-page", title: "Update GitHub page with minimalist layout", repo: "personal/jbwashington.github.io",
+   cost: 11.02, wall_ms: 131216921, api_ms: 1450000, tier: "junior"},
+  {id: "stripe-bill", title: "Set up Stripe invoice generation for Titan clients", repo: "orgs/titan-secure-tech",
+   cost: 1.91, wall_ms: 40781582, api_ms: 320000, tier: "senior"},
+  {id: "iptv-audit", title: "Investigate IPTVEditor pattern audit downtime", repo: "personal/iptv-panel",
+   cost: 3.04, wall_ms: 4088686, api_ms: 600000, tier: "standard"},
+];
+
+const ASYNC_THRESHOLD = 0.03;
+
+function isAsync(s) { return (s.api_ms / s.wall_ms) < ASYNC_THRESHOLD; }
+function activeHours(s) { return s.api_ms / 1000 / 3600; }
+function wallHours(s)   { return s.wall_ms / 1000 / 3600; }
+function fmt(n) { return "$" + n.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
+function fmt2(n) { return "$" + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+
+const state = {
+  multiplier: 10,
+  markup: 4,
+  activeOnly: true,
+  rates: {junior: 80, standard: 130, senior: 180, strategic: 250},
+  sessions: SESSIONS.map(s => ({...s})),
+};
+
+function recalc() {
+  const totalCost = state.sessions.reduce((a,s) => a + s.cost, 0);
+  const totalWall = state.sessions.reduce((a,s) => a + wallHours(s), 0);
+  const totalActive = state.sessions.reduce((a,s) => a + activeHours(s), 0);
+
+  const standardRate = state.rates.standard;
+  const hourly = (state.activeOnly ? totalActive : totalWall) * standardRate;
+
+  const token = totalCost * state.multiplier;
+
+  let tiered = 0;
+  for (const tier of ["junior","standard","senior","strategic"]) {
+    const inTier = state.sessions.filter(s => s.tier === tier);
+    const hrs = inTier.reduce((a,s) => a + (state.activeOnly ? activeHours(s) : wallHours(s)), 0);
+    const sub = hrs * state.rates[tier];
+    tiered += sub;
+    document.querySelector(`[data-col-total="${tier}"]`).textContent = fmt(sub);
+  }
+
+  const passthrough = token * state.markup;
+
+  setText("total-hourly", fmt(hourly));
+  setText("total-token", fmt(token));
+  setText("total-tiered", fmt(tiered));
+  setText("total-passthrough", fmt(passthrough));
+
+  setText("detail-hourly", `${(state.activeOnly ? totalActive : totalWall).toFixed(1)}h × $${standardRate}/hr`);
+  setText("detail-token", `${fmt2(totalCost)} cost × ${state.multiplier}×`);
+  setText("detail-tiered", `${state.sessions.length} sessions across 4 tiers`);
+  setText("detail-passthrough", `${fmt(token)} × ${state.markup}× markup`);
+}
+
+function setText(name, val) {
+  document.querySelectorAll(`[data-bind="${name}"]`).forEach(e => e.textContent = val);
+}
+
+function renderSessions() {
+  document.querySelectorAll(".column").forEach(c => {
+    [...c.querySelectorAll(".session")].forEach(s => s.remove());
+  });
+  state.sessions.forEach(s => {
+    const col = document.querySelector(`[data-col="${s.tier}"]`);
+    if (!col) return;
+    const el = document.createElement("div");
+    el.className = "session";
+    el.draggable = true;
+    el.dataset.id = s.id;
+    const async = isAsync(s);
+    el.innerHTML = `
+      <div class="s-title">${s.title}</div>
+      <div class="s-meta">
+        <span>${fmt2(s.cost)}</span>
+        <span>${activeHours(s).toFixed(2)}h active</span>
+        <span>${wallHours(s).toFixed(1)}h wall</span>
+        ${async ? '<span class="async-flag">async</span>' : ''}
+      </div>
+      <div class="s-repo">${s.repo}</div>
+    `;
+    col.appendChild(el);
+  });
+  attachDragHandlers();
+}
+
+function attachDragHandlers() {
+  document.querySelectorAll(".session").forEach(card => {
+    card.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("id", card.dataset.id);
+      e.dataTransfer.effectAllowed = "move";
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+  });
+  document.querySelectorAll(".column").forEach(col => {
+    col.addEventListener("dragover", e => {
+      e.preventDefault();
+      col.style.background = "color-mix(in srgb, var(--accent) 8%, var(--surface))";
+    });
+    col.addEventListener("dragleave", () => col.style.background = "");
+    col.addEventListener("drop", e => {
+      e.preventDefault();
+      col.style.background = "";
+      const id = e.dataTransfer.getData("id");
+      const s = state.sessions.find(x => x.id === id);
+      if (s) { s.tier = col.dataset.col; renderSessions(); recalc(); }
+    });
+  });
+}
+
+document.getElementById("mult").addEventListener("input", e => {
+  state.multiplier = +e.target.value;
+  document.getElementById("mult-val").textContent = state.multiplier + "×";
+  recalc();
+});
+document.getElementById("markup").addEventListener("input", e => {
+  state.markup = +e.target.value;
+  document.getElementById("markup-val").textContent = state.markup + "×";
+  recalc();
+});
+document.getElementById("active-only").addEventListener("change", e => {
+  state.activeOnly = e.target.checked;
+  recalc();
+});
+document.querySelectorAll("[data-tier-rate]").forEach(inp => {
+  inp.addEventListener("input", e => {
+    state.rates[inp.dataset.tierRate] = +inp.value || 0;
+    recalc();
+  });
+});
+
+renderSessions();
+recalc();
+</script>
+
+</body>
+</html>
